@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import styles from '../styles/Chat.module.css';
 
 export default function Home() {
+  const [api, setApi] = useState('openai');
   const [query, setQuery] = useState('');
-  const [response, setResponse] = useState('');
+  const [messages, setMessages] = useState([]);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -10,7 +12,10 @@ export default function Home() {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    setResponse('');
+
+    const newMessage = { role: 'user', content: query };
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
+    setQuery('');
 
     try {
       const res = await fetch('/api/openai', {
@@ -18,7 +23,7 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({ api, query }),
       });
 
       const text = await res.text(); // Get the raw response text
@@ -29,7 +34,8 @@ export default function Home() {
 
       try {
         const data = JSON.parse(text); // Parse the JSON response
-        setResponse(data.result);
+        const aiMessage = { role: 'assistant', content: `[${api.toUpperCase()}] ${data.result}` };
+        setMessages((prevMessages) => [...prevMessages, aiMessage]);
       } catch (parseError) {
         console.error('Failed to parse JSON response:', text);
         throw new Error(`Failed to parse JSON response: ${text}`);
@@ -43,25 +49,36 @@ export default function Home() {
   };
 
   return (
-    <div>
-      <h1>OpenAI Chat</h1>
+    <div className={styles.chatContainer}>
+      <h1>AI Chat</h1>
       <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Ask something..."
-        />
-        <button type="submit" disabled={isLoading}>Submit</button>
+        <label>
+          Select API:
+          <select value={api} onChange={(e) => setApi(e.target.value)}>
+            <option value="openai">OpenAI</option>
+            <option value="deepseek">DeepSeek</option>
+          </select>
+        </label>
+        <div className={styles.chatBox}>
+          {messages.map((message, index) => (
+            <div key={index} className={`${styles.chatMessage} ${styles[message.role]}`}>
+              <p>{message.content}</p>
+            </div>
+          ))}
+        </div>
+        <div className={styles.inputContainer}>
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Type your message..."
+            disabled={isLoading}
+          />
+          <button type="submit" disabled={isLoading || !query.trim()}>Send</button>
+        </div>
       </form>
       {isLoading && <p>Loading...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
-      {response && (
-        <div>
-          <h2>Response:</h2>
-          <p>{response}</p>
-        </div>
-      )}
     </div>
   );
 }
