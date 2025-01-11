@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import styles from '../styles/Chat.module.css';
 
 export default function Chat() {
@@ -9,6 +9,10 @@ export default function Chat() {
   const [isLoading, setIsLoading] = useState(false);
   const [inputMoved, setInputMoved] = useState(false);
   const chatBoxRef = useRef(null);
+
+  const capitalizeFirstLetter = (string) => {
+    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,7 +40,7 @@ export default function Chat() {
 
       try {
         const data = JSON.parse(text); // Parse the JSON response
-        const aiMessage = { role: 'assistant', content: `[${api.toUpperCase()}] ${data.result}` };
+        const aiMessage = { role: 'assistant', content: `[${capitalizeFirstLetter(api)}] ${data.result}` };
         setMessages((prevMessages) => [...prevMessages, aiMessage]);
       } catch (parseError) {
         console.error('Failed to parse JSON response:', text);
@@ -53,6 +57,12 @@ export default function Chat() {
       }
     }
   };
+
+  useEffect(() => {
+    if (chatBoxRef.current) {
+      chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   const renderMessageContent = (content) => {
     const tokens = content.split(' ');
@@ -98,10 +108,10 @@ export default function Chat() {
 
   return (
     <div className={styles.chatContainer}>
-      <h1>AI Agents</h1>
+      <h1>AI Chat</h1>
       <form onSubmit={handleSubmit}>
         <label>
-          Select AI:
+          Select API:
           <select value={api} onChange={(e) => setApi(e.target.value)} className={styles.select}>
             <option value="deepseek">DeepSeek</option>
             <option value="openai">OpenAI</option>
