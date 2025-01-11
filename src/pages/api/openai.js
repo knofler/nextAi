@@ -37,7 +37,7 @@ export default async function handler(req, res) {
   try {
     const completion = await openai.chat.completions.create({
       model: model,
-      max_tokens: 200, // Limit response tokens to 200
+      max_tokens: 500, // Limit response tokens to 200
       messages: [
         { role: 'system', content: 'You are a helpful assistant.' },
         { role: 'user', content: query },

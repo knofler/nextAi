@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import styles from '../styles/Chat.module.css';
 
-export default function Home() {
-  const [api, setApi] = useState('openai');
+export default function Chat() {
+  const [api, setApi] = useState('deepseek'); // Set default to 'deepseek'
   const [query, setQuery] = useState('');
   const [messages, setMessages] = useState([]);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [inputMoved, setInputMoved] = useState(false);
+  const chatBoxRef = useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -45,7 +47,53 @@ export default function Home() {
       setError(error.message);
     } finally {
       setIsLoading(false);
+      setInputMoved(true);
+      if (chatBoxRef.current) {
+        chatBoxRef.current.style.maxHeight = 'calc(100vh - 200px)';
+      }
     }
+  };
+
+  const renderMessageContent = (content) => {
+    const tokens = content.split(' ');
+    const paragraphs = [];
+    let currentParagraph = [];
+
+    tokens.forEach((token, index) => {
+      currentParagraph.push(token);
+      if ((index + 1) % 100 === 0 || index === tokens.length - 1) {
+        paragraphs.push(currentParagraph.join(' '));
+        currentParagraph = [];
+      }
+    });
+
+    return paragraphs.map((paragraph, index) => (
+      <p key={index} dangerouslySetInnerHTML={{ __html: paragraph }} />
+    ));
+  };
+
+  const renderMessage = (message) => {
+    const content = message.content;
+
+    // Check for headings and list items
+    const lines = content.split('\n');
+    return lines.map((line, index) => {
+      if (line.startsWith('**') && line.endsWith('**')) {
+        return <h2 key={index}>{line.slice(2, -2).trim()}</h2>;
+      }
+      if (line.startsWith('###')) {
+        return <h3 key={index}>{line.slice(3).trim()}</h3>;
+      }
+      if (line.match(/^\d+\.\s\*\*.*\*\*:/)) {
+        const [heading, ...rest] = line.split(':');
+        return (
+          <li key={index}>
+            <strong>{heading.replace(/\*\*/g, '').trim()}</strong>: {rest.join(':').trim()}
+          </li>
+        );
+      }
+      return renderMessageContent(line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'));
+    });
   };
 
   return (
@@ -54,31 +102,44 @@ export default function Home() {
       <form onSubmit={handleSubmit}>
         <label>
           Select API:
-          <select value={api} onChange={(e) => setApi(e.target.value)}>
-            <option value="openai">OpenAI</option>
+          <select value={api} onChange={(e) => setApi(e.target.value)} className={styles.select}>
             <option value="deepseek">DeepSeek</option>
+            <option value="openai">OpenAI</option>
           </select>
         </label>
-        <div className={styles.chatBox}>
-          {messages.map((message, index) => (
-            <div key={index} className={`${styles.chatMessage} ${styles[message.role]}`}>
-              <p>{message.content}</p>
+        <div className={styles.chatBoundary}>
+          {messages.length > 0 && (
+            <div className={styles.chatBox} ref={chatBoxRef}>
+              {messages.map((message, index) => (
+                <div key={index} className={`${styles.chatMessage} ${styles[message.role]}`}>
+                  {renderMessage(message)}
+                </div>
+              ))}
+              <div className={styles.statusMessage}>
+                {isLoading && <p>Loading...</p>}
+                {error && <p style={{ color: 'red' }}>{error}</p>}
+              </div>
             </div>
-          ))}
-        </div>
-        <div className={styles.inputContainer}>
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Type your message..."
-            disabled={isLoading}
-          />
-          <button type="submit" disabled={isLoading || !query.trim()}>Send</button>
+          )}
+          <div className={`${styles.inputContainer} ${inputMoved ? styles.inputMoved : ''}`}>
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Message AI"
+              className={styles.inputText}
+              disabled={isLoading}
+            />
+            <button
+              type="submit"
+              className={`${styles.button} ${isLoading || !query.trim() ? styles.buttonDisabled : ''}`}
+              disabled={isLoading || !query.trim()}
+            >
+              Send
+            </button>
+          </div>
         </div>
       </form>
-      {isLoading && <p>Loading...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
     </div>
   );
 }
