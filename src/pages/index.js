@@ -108,10 +108,10 @@ export default function Chat() {
 
   return (
     <div className={styles.chatContainer}>
-      <h1>AI Chat</h1>
+      <h1>AI Agents</h1>
       <form onSubmit={handleSubmit}>
         <label>
-          Select API:
+          Select AI:
           <select value={api} onChange={(e) => setApi(e.target.value)} className={styles.select}>
             <option value="deepseek">DeepSeek</option>
             <option value="openai">OpenAI</option>
