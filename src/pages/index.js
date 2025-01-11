@@ -79,20 +79,20 @@ export default function Chat() {
     const lines = content.split('\n');
     return lines.map((line, index) => {
       if (line.startsWith('**') && line.endsWith('**')) {
-        return <h2 key={index}>{line.slice(2, -2).trim()}</h2>;
+        return <h2 key={index} dangerouslySetInnerHTML={{ __html: line.slice(2, -2).trim() }} />;
       }
       if (line.startsWith('###')) {
-        return <h3 key={index}>{line.slice(3).trim()}</h3>;
+        return <h3 key={index} dangerouslySetInnerHTML={{ __html: line.slice(3).trim() }} />;
       }
       if (line.match(/^\d+\.\s\*\*.*\*\*:/)) {
         const [heading, ...rest] = line.split(':');
         return (
           <li key={index}>
-            <strong>{heading.replace(/\*\*/g, '').trim()}</strong>: {rest.join(':').trim()}
+            <strong dangerouslySetInnerHTML={{ __html: heading.replace(/\*\*/g, '').trim() }} />: {rest.join(':').trim()}
           </li>
         );
       }
-      return renderMessageContent(line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'));
+      return <p key={index} dangerouslySetInnerHTML={{ __html: line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />;
     });
   };
 

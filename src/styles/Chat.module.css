@@ -1,11 +1,12 @@
 .chatContainer {
   padding: 20px;
-  max-width: 600px;
+  max-width: 800px;
   margin: 0 auto;
 }
 
 .chatBoundary {
   position: relative;
+  padding-bottom: 60px; /* Add padding to create space for the input container */
 }
 
 .chatBox {
@@ -13,10 +14,11 @@
   padding: 1rem 2rem;
   margin-bottom: 10px;
   margin-top: 1rem;
-  max-height: auto;
+  min-height: 400px; /* Minimum height */
+  max-height: 450px; /* Maximum height */
   overflow-y: auto;
   transition: max-height 0.3s ease;
-  border-radius: .34rem;
+  border-radius: 0.34rem;
 }
 
 .chatMessage {
@@ -78,7 +80,7 @@
 
 .inputMoved {
   position: absolute;
-  bottom: -60px; /* Adjust this value as needed */
+  bottom: 20px; /* Adjust this value to create the desired gap */
   width: 100%;
 }
 
@@ -86,15 +88,15 @@
   flex: 1;
   padding: 10px;
   border: 1px solid #ccc;
-  border-radius: .3rem;
+  border-radius: 0.3rem;
 }
 
 .select {
   flex: 1;
-  padding: .41rem;
-  margin-left: .81rem;
+  padding: 0.41rem;
+  margin-left: 0.81rem;
   margin-bottom: 1rem;
-  border-radius: .3rem;
+  border-radius: 0.3rem;
   border: 1px solid #ccc;
 }
 
@@ -104,6 +106,7 @@
   background-color: #0070f3;
   color: white;
   cursor: pointer;
+  border-radius: 0.3rem;
 }
 
 .buttonDisabled {
