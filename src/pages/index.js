@@ -32,20 +32,14 @@ export default function Chat() {
         body: JSON.stringify({ api, query }),
       });
 
-      const text = await res.text(); // Get the raw response text
+      const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(`Request failed with status code ${res.status}: ${text}`);
+        throw new Error(`Request failed with status code ${res.status}: ${data.error}`);
       }
 
-      try {
-        const data = JSON.parse(text); // Parse the JSON response
-        const aiMessage = { role: 'assistant', content: `[${capitalizeFirstLetter(api)}] ${data.result}` };
-        setMessages((prevMessages) => [...prevMessages, aiMessage]);
-      } catch (parseError) {
-        console.error('Failed to parse JSON response:', text);
-        throw new Error(`Failed to parse JSON response: ${text}`);
-      }
+      const aiMessage = { role: 'assistant', content: `[${capitalizeFirstLetter(api)}] ${data.result}` };
+      setMessages((prevMessages) => [...prevMessages, aiMessage]);
     } catch (error) {
       console.error('Error during API call:', error);
       setError(error.message);
