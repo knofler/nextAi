@@ -24,7 +24,7 @@ export default function Chat() {
     setQuery('');
 
     try {
-      const res = await fetch('/api/openai', {
+      const response = await fetch('/api/openai', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -32,16 +32,20 @@ export default function Chat() {
         body: JSON.stringify({ api, query }),
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(`Request failed with status code ${res.status}: ${data.error}`);
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Request failed with status ${response.status}: ${text}`);
       }
 
-      const aiMessage = { role: 'assistant', content: `[${capitalizeFirstLetter(api)}] ${data.result}` };
-      setMessages((prevMessages) => [...prevMessages, aiMessage]);
+      const responseData = await response.json();
+
+      // Log the response data received from the server
+      console.log('Response data received:', responseData);
+
+      // Update the messages state with the response data
+      setMessages((prevMessages) => [...prevMessages, { role: api, content: responseData.result }]);
+
     } catch (error) {
-      console.error('Error during API call:', error);
       setError(error.message);
     } finally {
       setIsLoading(false);
@@ -116,6 +120,11 @@ export default function Chat() {
             <div className={styles.chatBox} ref={chatBoxRef}>
               {messages.map((message, index) => (
                 <div key={index} className={`${styles.chatMessage} ${styles[message.role]}`}>
+                  {message.role === 'user' ? (
+                    <strong>User: </strong>
+                  ) : (
+                    <strong>{capitalizeFirstLetter(message.role)}: </strong>
+                  )}
                   {renderMessage(message)}
                 </div>
               ))}

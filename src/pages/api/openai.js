@@ -96,20 +96,23 @@ export default async function handler(req, res) {
 
         // Process JSON data
         if (line.startsWith('data: ')) {
-          try {
-            const json = JSON.parse(line.replace(/^data: /, ''));
-            if (json.choices[0].delta.content) {
-              const content = json.choices[0].delta.content;
-              fullResponse += content;
+          const jsonString = line.replace(/^data: /, '').trim();
+          if (jsonString) {
+            try {
+              const json = JSON.parse(jsonString);
+              if (json.choices[0].delta.content) {
+                const content = json.choices[0].delta.content;
+                fullResponse += content;
+              }
+            } catch (error) {
+              console.error('Error parsing JSON:', error);
             }
-          } catch (error) {
-            console.error('Error parsing JSON:', error);
           }
         }
       }
     }
 
-    // Return the full response as a non-streaming response
+    // Send the full response as a JSON object
     res.status(200).json({ result: fullResponse });
   } catch (error) {
     console.error('Error creating chat completion:', error);
