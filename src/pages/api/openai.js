@@ -8,38 +8,31 @@ export default async function handler(req, res) {
   const { api, query } = req.body;
 
   let apiKey;
-  let openai;
-  let model;
   let apiUrl;
+  let model;
 
   switch (api) {
     case 'openai':
       apiKey = process.env.OPENAI_API_KEY;
       apiUrl = 'https://api.openai.com/v1/chat/completions';
-      openai = new OpenAI({
-        apiKey: apiKey,
-      });
-      model = 'gpt-4o'; // Ensure you have access to this model
+      model = 'gpt-4'; // Ensure you have access to this model
       break;
     case 'deepseek':
       apiKey = process.env.DEEPSEEK_API_KEY;
       apiUrl = 'https://api.deepseek.com/v1/chat/completions';
-      openai = new OpenAI({
-        baseURL: 'https://api.deepseek.com',
-        apiKey: apiKey,
-      });
       model = 'deepseek-chat';
       break;
     default:
       return res.status(400).json({ message: 'Invalid API selected' });
   }
 
-  // Log the API key for debugging purposes
-  console.log(`Using ${api} API Key:`, apiKey);
-
   if (!apiKey) {
     return res.status(401).json({ message: 'API key is missing or invalid' });
   }
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
 
   try {
     const response = await fetch(apiUrl, {
@@ -67,7 +60,6 @@ export default async function handler(req, res) {
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let done = false;
-    let fullResponse = '';
 
     while (!done) {
       const { value, done: readerDone } = await reader.read();
@@ -102,7 +94,7 @@ export default async function handler(req, res) {
               const json = JSON.parse(jsonString);
               if (json.choices[0].delta.content) {
                 const content = json.choices[0].delta.content;
-                fullResponse += content;
+                res.write(`data: ${JSON.stringify({ content })}\n\n`);
               }
             } catch (error) {
               console.error('Error parsing JSON:', error);
@@ -112,8 +104,8 @@ export default async function handler(req, res) {
       }
     }
 
-    // Send the full response as a JSON object
-    res.status(200).json({ result: fullResponse });
+    res.write('data: [DONE]\n\n');
+    res.end();
   } catch (error) {
     console.error('Error creating chat completion:', error);
     if (!res.headersSent) {

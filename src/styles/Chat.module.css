@@ -1,86 +1,50 @@
 .chatContainer {
-  padding: 20px;
-  max-width: 800px;
-  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center; /* Center vertically */
+  height: 100vh; /* Full viewport height */
+}
+
+.selectContainer {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.selectLabel {
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.select {
+  padding: .4rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: white;
+  cursor: pointer;
+  margin-bottom: .4rem;
+  margin-left: .6rem;
 }
 
 .chatBoundary {
-  position: relative;
-  padding-bottom: 60px; /* Add padding to create space for the input container */
+  width: 100%;
+  max-width: 600px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 10px;
+  margin-bottom: 10px;
 }
 
 .chatBox {
-  border: 0.01rem solid #ccc;
-  padding: 1rem 2rem;
-  margin-bottom: 10px;
-  margin-top: 1rem;
-  min-height: 400px; /* Minimum height */
-  max-height: 450px; /* Maximum height */
+  max-height: 400px;
   overflow-y: auto;
-  transition: max-height 0.3s ease;
-  border-radius: 0.34rem;
-}
-
-.chatMessage {
   margin-bottom: 10px;
-}
-
-.user {
-  text-align: right;
-  color: rgba(29, 29, 119, 0.576);
-}
-
-.assistant {
-  text-align: left;
-  color: #333;
-  line-height: 1.6rem;
-  font-size: 100%;
-  font-weight: 500;
-  font-family: 'Helvetica', 'Arial', sans-serif;
-  word-wrap: break-word;
-}
-
-.assistant code {
-  font-family: 'Courier New', 'Consolas', monospace;
-  background-color: #f5f5f5;
-  padding: 2px 4px;
-  border-radius: 3px;
-}
-
-.assistant p {
-  margin: 0.5rem 0;
-}
-
-.assistant h2 {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin: 1rem 0 0.5rem;
-}
-
-.assistant h3 {
-  font-size: 1.2rem;
-  font-weight: bold;
-  margin: 1rem 0 0.5rem;
-}
-
-.assistant ol {
-  padding-left: 1.5rem;
-}
-
-.assistant ol li {
-  margin: 0.5rem 0;
+  padding: .5rem;
 }
 
 .inputContainer {
   display: flex;
-  gap: 10px;
-  width: 100%;
-  transition: transform 0.3s ease;
-}
-
-.inputMoved {
-  position: absolute;
-  bottom: 20px; /* Adjust this value to create the desired gap */
   width: 100%;
 }
 
@@ -88,25 +52,17 @@
   flex: 1;
   padding: 10px;
   border: 1px solid #ccc;
-  border-radius: 0.3rem;
-}
-
-.select {
-  flex: 1;
-  padding: 0.41rem;
-  margin-left: 0.81rem;
-  margin-bottom: 1rem;
-  border-radius: 0.3rem;
-  border: 1px solid #ccc;
+  border-radius: 5px;
 }
 
 .button {
   padding: 10px 20px;
+  margin-left: 10px;
   border: none;
-  background-color: #0070f3;
+  border-radius: 5px;
+  background-color: #007bff;
   color: white;
   cursor: pointer;
-  border-radius: 0.3rem;
 }
 
 .buttonDisabled {
@@ -114,7 +70,16 @@
   cursor: not-allowed;
 }
 
-.statusMessage {
-  text-align: left;
-  margin-top: 10px;
+.userMessage {
+  margin: 1rem .1rem;
+  color: rgb(82, 70, 109); /* Set user question text color to purple */
+  font-weight: 600;
+}
+
+.userMessage::first-letter {
+  text-transform: capitalize; /* Capitalize the first letter */
+}
+
+.aiMessage {
+  margin-bottom: 10px;
 }

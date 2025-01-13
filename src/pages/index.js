@@ -1,12 +1,9 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import styles from '../styles/Chat.module.css';
 
 export default function Chat() {
   const [api, setApi] = useState('deepseek'); // Set default to 'deepseek'
   const [query, setQuery] = useState('');
-  const [messages, setMessages] = useState([]);
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [inputMoved, setInputMoved] = useState(false);
   const chatBoxRef = useRef(null);
 
@@ -16,12 +13,14 @@ export default function Chat() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError('');
 
-    const newMessage = { role: 'user', content: query };
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
+    const userMessage = document.createElement('div');
+    userMessage.className = styles.userMessage;
+    userMessage.innerHTML = `<strong>User: </strong><span>${query}</span>`;
+    chatBoxRef.current.appendChild(userMessage);
+    chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
     setQuery('');
+    setInputMoved(true);
 
     try {
       const response = await fetch('/api/openai', {
@@ -37,103 +36,88 @@ export default function Chat() {
         throw new Error(`Request failed with status ${response.status}: ${text}`);
       }
 
-      const responseData = await response.json();
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
+      let buffer = '';
 
-      // Log the response data received from the server
-      console.log('Response data received:', responseData);
+      const aiMessage = document.createElement('div');
+      aiMessage.className = styles.aiMessage;
+      aiMessage.innerHTML = `<strong>${capitalizeFirstLetter(api)}: </strong><span></span>`;
+      chatBoxRef.current.appendChild(aiMessage);
+      const aiContent = aiMessage.querySelector('span');
 
-      // Update the messages state with the response data
-      setMessages((prevMessages) => [...prevMessages, { role: api, content: responseData.result }]);
+      while (!done) {
+        const { value, done: readerDone } = await reader.read();
+        done = readerDone;
+        const chunk = decoder.decode(value, { stream: true });
 
+        // Log the chunk received from the stream
+        console.log('Chunk received:', chunk);
+
+        buffer += chunk;
+
+        let boundary = buffer.indexOf('\n');
+        while (boundary !== -1) {
+          const line = buffer.slice(0, boundary).trim();
+          buffer = buffer.slice(boundary + 1);
+
+          // Log each line for debugging
+          console.log('Processing line:', line);
+
+          // Skip empty lines
+          if (!line) {
+            boundary = buffer.indexOf('\n');
+            continue;
+          }
+
+          // Check for the [DONE] message
+          if (line === 'data: [DONE]') {
+            console.log('Detected [DONE] message');
+            done = true;
+            break;
+          }
+
+          // Process JSON data
+          if (line.startsWith('data: ')) {
+            const jsonString = line.replace(/^data: /, '').trim();
+            console.log("on line 79, jsonString: ", jsonString);
+            if (jsonString) {
+              try {
+                const json = JSON.parse(jsonString);
+                if (json.content) {
+                  const content = json.content;
+                  console.log("on line 85, content: ", content);
+                  aiContent.innerHTML += content.replace(/\n/g, '<br>');
+                  chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+                }
+              } catch (error) {
+                console.error('Error parsing JSON:', error);
+              }
+            }
+          }
+
+          boundary = buffer.indexOf('\n');
+        }
+      }
     } catch (error) {
-      setError(error.message);
-    } finally {
-      setIsLoading(false);
-      setInputMoved(true);
-      if (chatBoxRef.current) {
-        chatBoxRef.current.style.maxHeight = 'calc(100vh - 200px)';
-      }
+      console.error('Error during API call:', error);
     }
-  };
-
-  useEffect(() => {
-    if (chatBoxRef.current) {
-      chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
-    }
-  }, [messages]);
-
-  const renderMessageContent = (content) => {
-    const tokens = content.split(' ');
-    const paragraphs = [];
-    let currentParagraph = [];
-
-    tokens.forEach((token, index) => {
-      currentParagraph.push(token);
-      if ((index + 1) % 100 === 0 || index === tokens.length - 1) {
-        paragraphs.push(currentParagraph.join(' '));
-        currentParagraph = [];
-      }
-    });
-
-    return paragraphs.map((paragraph, index) => (
-      <p key={index} dangerouslySetInnerHTML={{ __html: paragraph }} />
-    ));
-  };
-
-  const renderMessage = (message) => {
-    const content = message.content;
-
-    // Check for headings and list items
-    const lines = content.split('\n');
-    return lines.map((line, index) => {
-      if (line.startsWith('**') && line.endsWith('**')) {
-        return <h2 key={index} dangerouslySetInnerHTML={{ __html: line.slice(2, -2).trim() }} />;
-      }
-      if (line.startsWith('###')) {
-        return <h3 key={index} dangerouslySetInnerHTML={{ __html: line.slice(3).trim() }} />;
-      }
-      if (line.match(/^\d+\.\s\*\*.*\*\*:/)) {
-        const [heading, ...rest] = line.split(':');
-        return (
-          <li key={index}>
-            <strong dangerouslySetInnerHTML={{ __html: heading.replace(/\*\*/g, '').trim() }} />: {rest.join(':').trim()}
-          </li>
-        );
-      }
-      return <p key={index} dangerouslySetInnerHTML={{ __html: line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />;
-    });
   };
 
   return (
     <div className={styles.chatContainer}>
       <h1>AI Agents</h1>
       <form onSubmit={handleSubmit}>
-        <label>
-          Select AI:
+        <div className={styles.selectContainer}>
+          <label className={styles.selectLabel}>Select AI:</label>
           <select value={api} onChange={(e) => setApi(e.target.value)} className={styles.select}>
             <option value="deepseek">DeepSeek</option>
             <option value="openai">OpenAI</option>
           </select>
-        </label>
+        </div>
         <div className={styles.chatBoundary}>
-          {messages.length > 0 && (
-            <div className={styles.chatBox} ref={chatBoxRef}>
-              {messages.map((message, index) => (
-                <div key={index} className={`${styles.chatMessage} ${styles[message.role]}`}>
-                  {message.role === 'user' ? (
-                    <strong>User: </strong>
-                  ) : (
-                    <strong>{capitalizeFirstLetter(message.role)}: </strong>
-                  )}
-                  {renderMessage(message)}
-                </div>
-              ))}
-              <div className={styles.statusMessage}>
-                {isLoading && <p>Loading...</p>}
-                {error && <p style={{ color: 'red' }}>{error}</p>}
-              </div>
-            </div>
-          )}
+          <div className={styles.chatBox} ref={chatBoxRef}></div>
           <div className={`${styles.inputContainer} ${inputMoved ? styles.inputMoved : ''}`}>
             <input
               type="text"
@@ -141,12 +125,11 @@ export default function Chat() {
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Message AI"
               className={styles.inputText}
-              disabled={isLoading}
             />
             <button
               type="submit"
-              className={`${styles.button} ${isLoading || !query.trim() ? styles.buttonDisabled : ''}`}
-              disabled={isLoading || !query.trim()}
+              className={`${styles.button} ${!query.trim() ? styles.buttonDisabled : ''}`}
+              disabled={!query.trim()}
             >
               Send
             </button>
