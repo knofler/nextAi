@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { ghcolors } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import styles from '../styles/Chat.module.css';
 
 export default function Chat() {
@@ -116,6 +118,36 @@ export default function Chat() {
     }
   }, [messages]);
 
+  // Customize the ghcolors theme for a dark background
+  const customTheme = {
+    ...ghcolors,
+    'pre[class*="language-"]': {
+      ...ghcolors['pre[class*="language-"]'],
+      background: '#181d28', // Dark background
+      color: '#ffffff', // Light text color
+    },
+    'code[class*="language-"]': {
+      ...ghcolors['code[class*="language-"]'],
+      background: '#181d28', // Dark background
+      color: '#ffffff', // Light text color
+    },
+    '.token.comment': {
+      color: '#6a9955', // Light green for comments
+    },
+    '.token.keyword': {
+      color: '#569cd6', // Light blue for keywords
+    },
+    '.token.string': {
+      color: '#ce9178', // Light orange for strings
+    },
+    '.token.function': {
+      color: '#dcdcaa', // Light yellow for functions
+    },
+    '.token.punctuation': {
+      color: '#d4d4d4', // Light gray for punctuation
+    },
+  };
+
   return (
     <div className={styles.chatContainer}>
       <h1>AI Agents</h1>
@@ -136,15 +168,16 @@ export default function Chat() {
                   components={{
                     code({ node, inline, className, children, ...props }) {
                       return !inline ? (
-                        <div className={styles.codeBlock}>
-                          <pre>
-                            <code className={className} {...props}>
-                              {children}
-                            </code>
-                          </pre>
-                        </div>
+                        <SyntaxHighlighter
+                          language="javascript"
+                          style={customTheme} // Use the custom theme
+                          PreTag="pre"
+                          className={styles.codeBlock}
+                        >
+                          {String(children).replace(/\n$/, '')}
+                        </SyntaxHighlighter>
                       ) : (
-                        <code className={className} {...props}>
+                        <code className={`${className} ${styles.codeBlock}`} {...props}>
                           {children}
                         </code>
                       );
