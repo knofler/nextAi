@@ -1,9 +1,13 @@
-import { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import styles from '../styles/Chat.module.css';
 
 export default function Chat() {
   const [api, setApi] = useState('deepseek'); // Set default to 'deepseek'
   const [query, setQuery] = useState('');
+  const [messages, setMessages] = useState([]);
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [inputMoved, setInputMoved] = useState(false);
   const chatBoxRef = useRef(null);
 
@@ -13,14 +17,12 @@ export default function Chat() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError('');
 
-    const userMessage = document.createElement('div');
-    userMessage.className = styles.userMessage;
-    userMessage.innerHTML = `<strong>User: </strong><span>${query}</span>`;
-    chatBoxRef.current.appendChild(userMessage);
-    chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+    const newMessage = { role: 'user', content: query };
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
     setQuery('');
-    setInputMoved(true);
 
     try {
       const response = await fetch('/api/openai', {
@@ -40,11 +42,7 @@ export default function Chat() {
       const decoder = new TextDecoder();
       let done = false;
 
-      const aiMessage = document.createElement('div');
-      aiMessage.className = styles.aiMessage;
-      aiMessage.innerHTML = `<strong>${capitalizeFirstLetter(api)}: </strong><span></span>`;
-      chatBoxRef.current.appendChild(aiMessage);
-      const aiContent = aiMessage.querySelector('span');
+      let responseContent = ''; // Store the response content
 
       while (!done) {
         const { value, done: readerDone } = await reader.read();
@@ -80,8 +78,18 @@ export default function Chat() {
                 const json = JSON.parse(jsonString);
                 if (json.content) {
                   const content = json.content;
-                  console.log('Appending content:', content);
-                  aiContent.innerHTML += content; // Use innerHTML to preserve formatting
+                  responseContent += content; // Append content to the response content
+                  setMessages((prevMessages) => {
+                    const lastMessage = prevMessages[prevMessages.length - 1];
+                    if (lastMessage && lastMessage.role === 'ai') {
+                      // Append to the last AI message
+                      lastMessage.content += content;
+                      return [...prevMessages.slice(0, -1), lastMessage];
+                    } else {
+                      // Add a new AI message
+                      return [...prevMessages, { role: 'ai', content }];
+                    }
+                  });
                   chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
                 }
               } catch (error) {
@@ -93,8 +101,20 @@ export default function Chat() {
       }
     } catch (error) {
       console.error('Error during API call:', error);
+    } finally {
+      setIsLoading(false);
+      setInputMoved(true);
+      if (chatBoxRef.current) {
+        chatBoxRef.current.style.maxHeight = 'calc(100vh - 200px)';
+      }
     }
   };
+
+  useEffect(() => {
+    if (chatBoxRef.current) {
+      chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   return (
     <div className={styles.chatContainer}>
@@ -108,7 +128,34 @@ export default function Chat() {
           </select>
         </div>
         <div className={styles.chatBoundary}>
-          <div className={styles.chatBox} ref={chatBoxRef}></div>
+          <div className={styles.chatBox} ref={chatBoxRef}>
+            {messages.map((message, index) => (
+              <div key={index} className={message.role === 'user' ? styles.userMessage : styles.aiMessage}>
+                <strong>{message.role === 'user' ? 'User' : capitalizeFirstLetter(api)}: </strong>
+                <ReactMarkdown
+                  components={{
+                    code({ node, inline, className, children, ...props }) {
+                      return !inline ? (
+                        <div className={styles.codeBlock}>
+                          <pre>
+                            <code className={className} {...props}>
+                              {children}
+                            </code>
+                          </pre>
+                        </div>
+                      ) : (
+                        <code className={className} {...props}>
+                          {children}
+                        </code>
+                      );
+                    },
+                  }}
+                >
+                  {message.content}
+                </ReactMarkdown>
+              </div>
+            ))}
+          </div>
           <div className={`${styles.inputContainer} ${inputMoved ? styles.inputMoved : ''}`}>
             <input
               type="text"

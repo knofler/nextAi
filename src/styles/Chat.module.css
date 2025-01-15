@@ -83,3 +83,17 @@
 .aiMessage {
   margin-bottom: 10px;
 }
+.codeBlock {
+  background-color: #181d28;
+  color: #eeee;
+  padding: 10px;
+  border-radius: 5px;
+  margin: 1rem .1rem;
+  font-family: monospace; /* Use monospace font for code blocks */
+  line-height: 1rem;
+  font-size: .75rem;
+  font-weight: 500;
+  word-wrap: break-word; /* Ensure long lines break within the container */
+  white-space: pre-wrap; /* Preserve whitespace and ensure lines wrap */
+  overflow-x: auto; /* Add horizontal scroll if necessary */
+}

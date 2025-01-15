@@ -95,9 +95,9 @@ export default async function handler(req, res) {
             try {
               const json = JSON.parse(jsonString);
               if (json.choices[0].delta.content) {
-                const content = json.choices[0].delta.content.replace(/\n/g, '<br>'); // Replace newlines with <br>
-                console.log('Sending content from Server:: ', content);
-                res.write(`data: ${JSON.stringify({ content })}\n\n`);
+                const content = json.choices[0].delta.content;
+                console.log('Sending content from Server:', content);
+                res.write(`data: ${JSON.stringify({ content })}\n\n`); // Send as JSON
                 res.flush(); // Flush the response
               }
             } catch (error) {
