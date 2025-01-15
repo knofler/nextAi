@@ -144,7 +144,19 @@ export default function Chat() {
       color: '#dcdcaa', // Light yellow for functions
     },
     '.token.punctuation': {
-      color: '#d4d4d4', // Light gray for punctuation
+      color: '#ffffff', // Bright white for punctuation
+    },
+    '.token.operator': {
+      color: '#ff79c6', // Bright pink for operators (e.g., +, -, *, /)
+    },
+    '.token.brace': {
+      color: '#50fa7b', // Bright green for braces { }
+    },
+    '.token.bracket': {
+      color: '#ffb86c', // Bright orange for brackets [ ]
+    },
+    '.token.paren': {
+      color: '#8be9fd', // Bright cyan for parentheses ( )
     },
   };
 
