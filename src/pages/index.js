@@ -39,7 +39,6 @@ export default function Chat() {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let done = false;
-      let buffer = '';
 
       const aiMessage = document.createElement('div');
       aiMessage.className = styles.aiMessage;
@@ -53,26 +52,20 @@ export default function Chat() {
         const chunk = decoder.decode(value, { stream: true });
 
         // Log the chunk received from the stream
-        console.log('Chunk received:', chunk);
+        console.log('Chunk received from server:', chunk);
 
-        buffer += chunk;
+        // Split the chunk by newlines to handle multiple JSON objects
+        const lines = chunk.split('\n').filter(line => line.trim() !== '');
 
-        let boundary = buffer.indexOf('\n');
-        while (boundary !== -1) {
-          const line = buffer.slice(0, boundary).trim();
-          buffer = buffer.slice(boundary + 1);
-
+        for (const line of lines) {
           // Log each line for debugging
           console.log('Processing line:', line);
 
           // Skip empty lines
-          if (!line) {
-            boundary = buffer.indexOf('\n');
-            continue;
-          }
+          if (!line.trim()) continue;
 
           // Check for the [DONE] message
-          if (line === 'data: [DONE]') {
+          if (line.trim() === 'data: [DONE]') {
             console.log('Detected [DONE] message');
             done = true;
             break;
@@ -81,14 +74,14 @@ export default function Chat() {
           // Process JSON data
           if (line.startsWith('data: ')) {
             const jsonString = line.replace(/^data: /, '').trim();
-            console.log("on line 79, jsonString: ", jsonString);
+            console.log('Parsing JSON:', jsonString);
             if (jsonString) {
               try {
                 const json = JSON.parse(jsonString);
                 if (json.content) {
                   const content = json.content;
-                  console.log("on line 85, content: ", content);
-                  aiContent.innerHTML += content.replace(/\n/g, '<br>');
+                  console.log('Appending content:', content);
+                  aiContent.innerHTML += content; // Use innerHTML to preserve formatting
                   chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
                 }
               } catch (error) {
@@ -96,8 +89,6 @@ export default function Chat() {
               }
             }
           }
-
-          boundary = buffer.indexOf('\n');
         }
       }
     } catch (error) {

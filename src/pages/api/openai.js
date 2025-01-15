@@ -30,6 +30,7 @@ export default async function handler(req, res) {
     return res.status(401).json({ message: 'API key is missing or invalid' });
   }
 
+  // Set headers for Server-Sent Events (SSE)
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
@@ -67,7 +68,7 @@ export default async function handler(req, res) {
       const chunk = decoder.decode(value, { stream: true });
 
       // Log the chunk received from the stream
-      console.log('Chunk received:', chunk);
+      console.log('Chunk received from API:', chunk);
 
       // Split the chunk by newlines to handle multiple JSON objects
       const lines = chunk.split('\n').filter(line => line.trim() !== '');
@@ -82,6 +83,7 @@ export default async function handler(req, res) {
         // Check for the [DONE] message
         if (line.trim() === 'data: [DONE]') {
           console.log('Detected [DONE] message');
+          res.write('data: [DONE]\n\n');
           done = true;
           break;
         }
@@ -93,8 +95,10 @@ export default async function handler(req, res) {
             try {
               const json = JSON.parse(jsonString);
               if (json.choices[0].delta.content) {
-                const content = json.choices[0].delta.content;
+                const content = json.choices[0].delta.content.replace(/\n/g, '<br>'); // Replace newlines with <br>
+                console.log('Sending content from Server:: ', content);
                 res.write(`data: ${JSON.stringify({ content })}\n\n`);
+                res.flush(); // Flush the response
               }
             } catch (error) {
               console.error('Error parsing JSON:', error);
@@ -104,7 +108,6 @@ export default async function handler(req, res) {
       }
     }
 
-    res.write('data: [DONE]\n\n');
     res.end();
   } catch (error) {
     console.error('Error creating chat completion:', error);
