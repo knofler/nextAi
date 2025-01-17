@@ -5,7 +5,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  const { api, query } = req.body;
+  const { api, query, userAPIKey } = req.body;
 
   let apiKey;
   let apiUrl;
@@ -13,12 +13,14 @@ export default async function handler(req, res) {
 
   switch (api) {
     case 'openai':
-      apiKey = process.env.OPENAI_API_KEY;
+      console.log('OpenAI API selected and userAPIKey is ', userAPIKey);
+      apiKey = userAPIKey || process.env.OPENAI_API_KEY;
       apiUrl = 'https://api.openai.com/v1/chat/completions';
       model = 'gpt-4'; // Ensure you have access to this model
       break;
     case 'deepseek':
-      apiKey = process.env.DEEPSEEK_API_KEY;
+      console.log('DeepSeek API selected and userAPIKey is ', userAPIKey);
+      apiKey = userAPIKey || process.env.DEEPSEEK_API_KEY;
       apiUrl = 'https://api.deepseek.com/v1/chat/completions';
       model = 'deepseek-chat';
       break;

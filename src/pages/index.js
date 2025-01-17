@@ -12,6 +12,8 @@ export default function Chat() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [inputMoved, setInputMoved] = useState(false);
+  const [useCustomApiKey, setUseCustomApiKey] = useState(false); // Checkbox state
+  const [customApiKey, setCustomApiKey] = useState(''); // Custom API key input
   const chatBoxRef = useRef(null);
   const inputRef = useRef(null);
   const chatContainerRef = useRef(null);
@@ -30,21 +32,41 @@ export default function Chat() {
     setPreviousQueries((prevQueries) => [...new Set([query, ...prevQueries])]);
     setQuery('');
 
+    const effectiveApiKey = useCustomApiKey ? customApiKey : ''; // Determine effective API key
+    console.log('Effective API Key:', effectiveApiKey); // Log effective API key
+
     try {
       const response = await fetch('/api/openai', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ api, query }),
+        body: JSON.stringify({ api, query, userAPIKey: effectiveApiKey }),
       });
 
       if (!response.ok) {
         const text = await response.text();
-        throw new Error(`Request failed with status ${response.status}: ${text}`);
+        console.log(`Request failed with status ${response.status}: ${text}`);
+        
+        // Extract the error message
+        let errorMessage = 'An error occurred. Please try again.';
+        try {
+          const errorJson = JSON.parse(text);
+          if (errorJson.error && errorJson.error.message) {
+            errorMessage = `Authentication Fails: ${errorJson.error.message}`;
+          }
+        } catch (parseError) {
+          console.error('Error parsing error response:', parseError);
+        }
+
+        return setError(errorMessage);
       }
 
-      const reader = response.body.getReader();
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('Streaming not supported by the API');
+      }
+
       const decoder = new TextDecoder();
       let done = false;
 
@@ -107,6 +129,7 @@ export default function Chat() {
       }
     } catch (error) {
       console.error('Error during API call:', error);
+      setError('An error occurred while processing your request. Please try again.'); // Display user-friendly error message
     } finally {
       setIsLoading(false);
       setInputMoved(true);
@@ -182,13 +205,36 @@ export default function Chat() {
     <div className={styles.chatContainer} ref={chatContainerRef}>
       <h1>AI Agents</h1>
       <form onSubmit={handleSubmit}>
-        <div className={styles.selectContainer}>
-          <label className={styles.selectLabel}>Select AI:</label>
-          <select value={api} onChange={(e) => setApi(e.target.value)} className={styles.select}>
-            <option value="deepseek">DeepSeek</option>
-            <option value="openai">OpenAI</option>
-          </select>
+        <div className={styles.formRow}>
+          <div className={styles.selectContainer}>
+            <label className={styles.selectLabel}>Select AI:</label>
+            <select value={api} onChange={(e) => setApi(e.target.value)} className={styles.select}>
+              <option value="deepseek">DeepSeek</option>
+              <option value="openai">OpenAI</option>
+            </select>
+          </div>
+
+          {/* Owner API Key Checkbox and Input Field */}
+          <div className={styles.apiKeyContainer}>
+            <label className={styles.apiKeyLabel}>
+              <input
+                type="checkbox"
+                checked={useCustomApiKey}
+                onChange={(e) => setUseCustomApiKey(e.target.checked)}
+              />
+              Owner API Key
+            </label>
+            <input
+              type="text"
+              value={customApiKey}
+              onChange={(e) => setCustomApiKey(e.target.value)}
+              placeholder="Enter your API key"
+              className={styles.apiKeyInput}
+              disabled={!useCustomApiKey}
+            />
+          </div>
         </div>
+
         <div className={styles.chatBoundary}>
           <div className={styles.chatBox} ref={chatBoxRef}>
             {messages.map((message, index) => (
@@ -247,6 +293,7 @@ export default function Chat() {
           </div>
         </div>
       </form>
+      {error && <div className={styles.errorMessage}>{error}</div>}
     </div>
   );
 }
