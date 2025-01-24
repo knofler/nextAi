@@ -27,7 +27,7 @@ export default function Chat() {
     setIsLoading(true);
     setError('');
 
-    const newMessage = { role: 'user', content: query };
+    const newMessage = { role: 'user', content: query, api };
     setMessages((prevMessages) => [...prevMessages, newMessage]);
     setPreviousQueries((prevQueries) => [...new Set([query, ...prevQueries])]);
     setQuery('');
@@ -62,66 +62,71 @@ export default function Chat() {
         return setError(errorMessage);
       }
 
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error('Streaming not supported by the API');
-      }
+      if (api === 'llama3.2') {
+        const data = await response.json();
+        setMessages((prevMessages) => [...prevMessages, { role: 'ai', content: data.content, api }]);
+      } else {
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('Streaming not supported by the API');
+        }
 
-      const decoder = new TextDecoder();
-      let done = false;
+        const decoder = new TextDecoder();
+        let done = false;
 
-      let responseContent = ''; // Store the response content
+        let responseContent = ''; // Store the response content
 
-      while (!done) {
-        const { value, done: readerDone } = await reader.read();
-        done = readerDone;
-        const chunk = decoder.decode(value, { stream: true });
+        while (!done) {
+          const { value, done: readerDone } = await reader.read();
+          done = readerDone;
+          const chunk = decoder.decode(value, { stream: true });
 
-        // Log the chunk received from the stream
-        console.log('Chunk received from server:', chunk);
+          // Log the chunk received from the stream
+          console.log('Chunk received from server:', chunk);
 
-        // Split the chunk by newlines to handle multiple JSON objects
-        const lines = chunk.split('\n').filter(line => line.trim() !== '');
+          // Split the chunk by newlines to handle multiple JSON objects
+          const lines = chunk.split('\n').filter(line => line.trim() !== '');
 
-        for (const line of lines) {
-          // Log each line for debugging
-          console.log('Processing line:', line);
+          for (const line of lines) {
+            // Log each line for debugging
+            console.log('Processing line:', line);
 
-          // Skip empty lines
-          if (!line.trim()) continue;
+            // Skip empty lines
+            if (!line.trim()) continue;
 
-          // Check for the [DONE] message
-          if (line.trim() === 'data: [DONE]') {
-            console.log('Detected [DONE] message');
-            done = true;
-            break;
-          }
+            // Check for the [DONE] message
+            if (line.trim() === 'data: [DONE]') {
+              console.log('Detected [DONE] message');
+              done = true;
+              break;
+            }
 
-          // Process JSON data
-          if (line.startsWith('data: ')) {
-            const jsonString = line.replace(/^data: /, '').trim();
-            console.log('Parsing JSON:', jsonString);
-            if (jsonString) {
-              try {
-                const json = JSON.parse(jsonString);
-                if (json.content) {
-                  const content = json.content;
-                  responseContent += content; // Append content to the response content
-                  setMessages((prevMessages) => {
-                    const lastMessage = prevMessages[prevMessages.length - 1];
-                    if (lastMessage && lastMessage.role === 'ai') {
-                      // Append to the last AI message
-                      lastMessage.content += content;
-                      return [...prevMessages.slice(0, -1), lastMessage];
-                    } else {
-                      // Add a new AI message
-                      return [...prevMessages, { role: 'ai', content }];
-                    }
-                  });
-                  chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+            // Process JSON data
+            if (line.startsWith('data: ')) {
+              const jsonString = line.replace(/^data: /, '').trim();
+              console.log('Parsing JSON:', jsonString);
+              if (jsonString) {
+                try {
+                  const json = JSON.parse(jsonString);
+                  if (json.content) {
+                    const content = json.content;
+                    responseContent += content; // Append content to the response content
+                    setMessages((prevMessages) => {
+                      const lastMessage = prevMessages[prevMessages.length - 1];
+                      if (lastMessage && lastMessage.role === 'ai' && lastMessage.api === api) {
+                        // Append to the last AI message
+                        lastMessage.content += content;
+                        return [...prevMessages.slice(0, -1), lastMessage];
+                      } else {
+                        // Add a new AI message
+                        return [...prevMessages, { role: 'ai', content, api }];
+                      }
+                    });
+                    chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+                  }
+                } catch (error) {
+                  console.error('Error parsing JSON:', error);
                 }
-              } catch (error) {
-                console.error('Error parsing JSON:', error);
               }
             }
           }
@@ -211,6 +216,7 @@ export default function Chat() {
             <select value={api} onChange={(e) => setApi(e.target.value)} className={styles.select}>
               <option value="deepseek">DeepSeek</option>
               <option value="openai">OpenAI</option>
+              <option value="llama3.2">Llama3.2</option>
             </select>
           </div>
 
@@ -239,7 +245,7 @@ export default function Chat() {
           <div className={styles.chatBox} ref={chatBoxRef}>
             {messages.map((message, index) => (
               <div key={index} className={message.role === 'user' ? styles.userMessage : styles.aiMessage}>
-                <strong>{message.role === 'user' ? <span className={styles.userName}>Question:</span> : capitalizeFirstLetter(api)} </strong>
+                <strong>{message.role === 'user' ? <span className={styles.userName}>Question:</span> : capitalizeFirstLetter(message.api)} </strong>
                 <span>
                   <ReactMarkdown
                     components={{
