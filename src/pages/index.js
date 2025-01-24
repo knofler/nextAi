@@ -201,6 +201,15 @@ export default function Chat() {
     },
   };
 
+  const modelDescriptions = {
+    'deepseek-coder:6.7b': 'DeepSeek Coder is a capable coding model trained on two trillion code and natural language tokens - parameters 6.7B - size: 3.8 GB',
+    'codellama': 'A large language model that can use text prompts to generate and discuss code - parameters 7B - size: 3.8 GB',
+    'llama3.2': 'Meta\'s Llama 3.2 goes small with 1B and 3B models  - parameters 3B - size: 2.0GB',
+    'gemma': 'Gemma is a family of lightweight, state-of-the-art open models built by Google DeepMind. Updated to version 1.1  - parameters 7B - size: 5.0 GB',
+    'deepseek': 'DeepSeek API - Reasoning models - https://api.deepseek.com/',
+    'openai': 'OpenAI - GPT-4 - https://api.openai.com/'
+  };
+
   return (
     <div className={styles.chatContainer} ref={chatContainerRef}>
       <h1>AI Agents</h1>
@@ -211,11 +220,13 @@ export default function Chat() {
             <select value={api} onChange={(e) => setApi(e.target.value)} className={styles.select}>
               <option value="deepseek">DeepSeek</option>
               <option value="openai">OpenAI</option>
-              <optgroup label="Edge LLM">
-                <option value="llama3.2">Llama3.2</option>
-                <option value="gemma">Gemma</option>
+              <optgroup label="Code Models">
                 <option value="deepseek-coder:6.7b">DeepSeek-Coder:6.7b</option>
                 <option value="codellama">CodeLlama</option>
+              </optgroup>
+              <optgroup label="GPT Models">
+                <option value="llama3.2">Llama3.2</option>
+                <option value="gemma">Gemma</option>
               </optgroup>
             </select>
           </div>
@@ -239,6 +250,11 @@ export default function Chat() {
               disabled={!useCustomApiKey}
             />
           </div>
+        </div>
+
+        <div className={styles.modelDetails}>
+          <h4>Model Details</h4>
+          <p>{modelDescriptions[api]}</p>
         </div>
 
         <div className={styles.chatBoundary}>
