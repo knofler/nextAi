@@ -211,9 +211,12 @@ export default function Chat() {
             <select value={api} onChange={(e) => setApi(e.target.value)} className={styles.select}>
               <option value="deepseek">DeepSeek</option>
               <option value="openai">OpenAI</option>
-              <option value="llama3.2">Llama3.2</option>
-              <option value="gemma">Gemma</option>
-              <option value="deepseek-coder:6.7b">DeepSeek-Coder:6.7b</option>
+              <optgroup label="Edge LLM">
+                <option value="llama3.2">Llama3.2</option>
+                <option value="gemma">Gemma</option>
+                <option value="deepseek-coder:6.7b">DeepSeek-Coder:6.7b</option>
+                <option value="codellama">CodeLlama</option>
+              </optgroup>
             </select>
           </div>
 

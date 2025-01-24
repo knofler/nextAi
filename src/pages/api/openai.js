@@ -5,6 +5,8 @@ export default async function handler(req, res) {
 
   const { api, query, userAPIKey } = req.body;
 
+  const localLLMs = ['llama3.2', 'gemma', 'deepseek-coder:6.7b', 'codellama'];
+
   let apiKey;
   let apiUrl;
   let model;
@@ -22,26 +24,17 @@ export default async function handler(req, res) {
       apiUrl = 'https://api.deepseek.com/v1/chat/completions';
       model = 'deepseek-chat';
       break;
-    case 'llama3.2':
-      console.log('Llama3.2 API selected and userAPIKey is not required');
-      apiUrl = 'http://localhost:11434/api/generate';
-      model = 'llama3.2'; // Replace with your correct model name
-      break;
-    case 'gemma':
-      console.log('Gemma API selected and userAPIKey is not required');
-      apiUrl = 'http://localhost:11434/api/generate';
-      model = 'gemma'; // Replace with your correct model name
-      break;
-    case 'deepseek-coder:6.7b':
-      console.log('DeepSeek-Coder:6.7b API selected and userAPIKey is not required');
-      apiUrl = 'http://localhost:11434/api/generate';
-      model = 'deepseek-coder:6.7b'; // Replace with your correct model name
-      break;
     default:
-      return res.status(400).json({ message: 'Invalid API selected' });
+      if (localLLMs.includes(api)) {
+        console.log(`${api} API selected and userAPIKey is not required`);
+        apiUrl = 'http://localhost:11434/api/generate';
+        model = api; // Use the api value directly as the model name
+      } else {
+        return res.status(400).json({ message: 'Invalid API selected' });
+      }
   }
 
-  if (api !== 'llama3.2' && api !== 'gemma' && api !== 'deepseek-coder:6.7b' && !apiKey) {
+  if (!localLLMs.includes(api) && !apiKey) {
     return res.status(401).json({ message: 'API key is missing or invalid' });
   }
 
@@ -55,11 +48,11 @@ export default async function handler(req, res) {
       'Content-Type': 'application/json',
     };
 
-    if (api !== 'llama3.2' && api !== 'gemma' && api !== 'deepseek-coder:6.7b') {
+    if (!localLLMs.includes(api)) {
       headers['Authorization'] = `Bearer ${apiKey}`;
     }
 
-    const body = api === 'llama3.2' || api === 'gemma' || api === 'deepseek-coder:6.7b' ? JSON.stringify({
+    const body = localLLMs.includes(api) ? JSON.stringify({
       model: model,
       prompt: query,
       max_tokens: 50,
@@ -122,9 +115,8 @@ export default async function handler(req, res) {
             res.write(`data: ${JSON.stringify({ content })}\n\n`);
             res.flush();
           } else if (json.response) {
-            const content = json.response;
-            responseContent += content;
-            res.write(`data: ${JSON.stringify({ content })}\n\n`);
+            responseContent += json.response;
+            res.write(`data: ${JSON.stringify({ content: json.response })}\n\n`);
             res.flush();
           }
         } catch (error) {
