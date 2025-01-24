@@ -62,71 +62,66 @@ export default function Chat() {
         return setError(errorMessage);
       }
 
-      if (api === 'llama3.2' || api === 'gemma') {
-        const data = await response.json();
-        setMessages((prevMessages) => [...prevMessages, { role: 'ai', content: data.content, api }]);
-      } else {
-        const reader = response.body?.getReader();
-        if (!reader) {
-          throw new Error('Streaming not supported by the API');
-        }
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('Streaming not supported by the API');
+      }
 
-        const decoder = new TextDecoder();
-        let done = false;
+      const decoder = new TextDecoder();
+      let done = false;
 
-        let responseContent = ''; // Store the response content
+      let responseContent = ''; // Store the response content
 
-        while (!done) {
-          const { value, done: readerDone } = await reader.read();
-          done = readerDone;
-          const chunk = decoder.decode(value, { stream: true });
+      while (!done) {
+        const { value, done: readerDone } = await reader.read();
+        done = readerDone;
+        const chunk = decoder.decode(value, { stream: true });
 
-          // Log the chunk received from the stream
-          console.log('Chunk received from server:', chunk);
+        // Log the chunk received from the stream
+        console.log('Chunk received from server:', chunk);
 
-          // Split the chunk by newlines to handle multiple JSON objects
-          const lines = chunk.split('\n').filter(line => line.trim() !== '');
+        // Split the chunk by newlines to handle multiple JSON objects
+        const lines = chunk.split('\n').filter(line => line.trim() !== '');
 
-          for (const line of lines) {
-            // Log each line for debugging
-            console.log('Processing line:', line);
+        for (const line of lines) {
+          // Log each line for debugging
+          console.log('Processing line:', line);
 
-            // Skip empty lines
-            if (!line.trim()) continue;
+          // Skip empty lines
+          if (!line.trim()) continue;
 
-            // Check for the [DONE] message
-            if (line.trim() === 'data: [DONE]') {
-              console.log('Detected [DONE] message');
-              done = true;
-              break;
-            }
+          // Check for the [DONE] message
+          if (line.trim() === 'data: [DONE]') {
+            console.log('Detected [DONE] message');
+            done = true;
+            break;
+          }
 
-            // Process JSON data
-            if (line.startsWith('data: ')) {
-              const jsonString = line.replace(/^data: /, '').trim();
-              console.log('Parsing JSON:', jsonString);
-              if (jsonString) {
-                try {
-                  const json = JSON.parse(jsonString);
-                  if (json.content) {
-                    const content = json.content;
-                    responseContent += content; // Append content to the response content
-                    setMessages((prevMessages) => {
-                      const lastMessage = prevMessages[prevMessages.length - 1];
-                      if (lastMessage && lastMessage.role === 'ai' && lastMessage.api === api) {
-                        // Append to the last AI message
-                        lastMessage.content += content;
-                        return [...prevMessages.slice(0, -1), lastMessage];
-                      } else {
-                        // Add a new AI message
-                        return [...prevMessages, { role: 'ai', content, api }];
-                      }
-                    });
-                    chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
-                  }
-                } catch (error) {
-                  console.error('Error parsing JSON:', error);
+          // Process JSON data
+          if (line.startsWith('data: ')) {
+            const jsonString = line.replace(/^data: /, '').trim();
+            console.log('Parsing JSON:', jsonString);
+            if (jsonString) {
+              try {
+                const json = JSON.parse(jsonString);
+                if (json.content) {
+                  const content = json.content;
+                  responseContent += content; // Append content to the response content
+                  setMessages((prevMessages) => {
+                    const lastMessage = prevMessages[prevMessages.length - 1];
+                    if (lastMessage && lastMessage.role === 'ai' && lastMessage.api === api) {
+                      // Append to the last AI message
+                      lastMessage.content += content;
+                      return [...prevMessages.slice(0, -1), lastMessage];
+                    } else {
+                      // Add a new AI message
+                      return [...prevMessages, { role: 'ai', content, api }];
+                    }
+                  });
+                  chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
                 }
+              } catch (error) {
+                console.error('Error parsing JSON:', error);
               }
             }
           }
@@ -218,6 +213,7 @@ export default function Chat() {
               <option value="openai">OpenAI</option>
               <option value="llama3.2">Llama3.2</option>
               <option value="gemma">Gemma</option>
+              <option value="deepseek-coder:6.7b">DeepSeek-Coder:6.7b</option>
             </select>
           </div>
 

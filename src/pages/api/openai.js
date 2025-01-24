@@ -1,5 +1,3 @@
-import OpenAI from 'openai';
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
@@ -34,11 +32,16 @@ export default async function handler(req, res) {
       apiUrl = 'http://localhost:11434/api/generate';
       model = 'gemma'; // Replace with your correct model name
       break;
+    case 'deepseek-coder:6.7b':
+      console.log('DeepSeek-Coder:6.7b API selected and userAPIKey is not required');
+      apiUrl = 'http://localhost:11434/api/generate';
+      model = 'deepseek-coder:6.7b'; // Replace with your correct model name
+      break;
     default:
       return res.status(400).json({ message: 'Invalid API selected' });
   }
 
-  if (api !== 'llama3.2' && api !== 'gemma' && !apiKey) {
+  if (api !== 'llama3.2' && api !== 'gemma' && api !== 'deepseek-coder:6.7b' && !apiKey) {
     return res.status(401).json({ message: 'API key is missing or invalid' });
   }
 
@@ -52,11 +55,11 @@ export default async function handler(req, res) {
       'Content-Type': 'application/json',
     };
 
-    if (api !== 'llama3.2' && api !== 'gemma') {
+    if (api !== 'llama3.2' && api !== 'gemma' && api !== 'deepseek-coder:6.7b') {
       headers['Authorization'] = `Bearer ${apiKey}`;
     }
 
-    const body = api === 'llama3.2' || api === 'gemma' ? JSON.stringify({
+    const body = api === 'llama3.2' || api === 'gemma' || api === 'deepseek-coder:6.7b' ? JSON.stringify({
       model: model,
       prompt: query,
       max_tokens: 50,
@@ -81,97 +84,58 @@ export default async function handler(req, res) {
       throw new Error(`Request failed with status ${response.status}: ${text}`);
     }
 
-    if (api === 'llama3.2' || api === 'gemma') {
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let done = false;
-      let responseContent = '';
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let done = false;
+    let responseContent = '';
 
-      while (!done) {
-        const { value, done: readerDone } = await reader.read();
-        done = readerDone;
-        const chunk = decoder.decode(value, { stream: true });
+    while (!done) {
+      const { value, done: readerDone } = await reader.read();
+      done = readerDone;
+      const chunk = decoder.decode(value, { stream: true });
 
-        // Log the chunk received from the stream
-        console.log('Chunk received from API:', chunk);
+      // Log the chunk received from the stream
+      console.log('Chunk received from API:', chunk);
 
-        // Split the chunk by newlines to handle multiple JSON objects
-        const lines = chunk.split('\n').filter(line => line.trim() !== '');
+      // Split the chunk by newlines to handle multiple JSON objects
+      const lines = chunk.split('\n').filter(line => line.trim() !== '');
 
-        for (const line of lines) {
-          // Log each line for debugging
-          console.log('Processing line:', line);
+      for (const line of lines) {
+        // Log each line for debugging
+        console.log('Processing line:', line);
 
-          try {
-            const json = JSON.parse(line);
-            if (json.response) {
-              responseContent += json.response;
-            }
-            if (json.done) {
-              done = true;
-              break;
-            }
-          } catch (error) {
-            console.error('Error parsing JSON:', error);
-            console.error('Line:', line);
+        // Remove the 'data: ' prefix if present
+        const jsonString = line.startsWith('data: ') ? line.replace(/^data: /, '').trim() : line.trim();
+
+        // Check for the [DONE] message
+        if (jsonString === '[DONE]') {
+          console.log('Detected [DONE] message');
+          done = true;
+          break;
+        }
+
+        try {
+          const json = JSON.parse(jsonString);
+          if (json.choices && json.choices[0] && json.choices[0].delta && json.choices[0].delta.content) {
+            const content = json.choices[0].delta.content;
+            responseContent += content;
+            res.write(`data: ${JSON.stringify({ content })}\n\n`);
+            res.flush();
+          } else if (json.response) {
+            const content = json.response;
+            responseContent += content;
+            res.write(`data: ${JSON.stringify({ content })}\n\n`);
+            res.flush();
           }
+        } catch (error) {
+          console.error('Error parsing JSON:', error);
+          console.error('Line:', line);
         }
       }
-
-      res.status(200).json({ content: responseContent });
-    } else {
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let done = false;
-
-      while (!done) {
-        const { value, done: readerDone } = await reader.read();
-        done = readerDone;
-        const chunk = decoder.decode(value, { stream: true });
-
-        // Log the chunk received from the stream
-        console.log('Chunk received from API:', chunk);
-
-        // Split the chunk by newlines to handle multiple JSON objects
-        const lines = chunk.split('\n').filter(line => line.trim() !== '');
-
-        for (const line of lines) {
-          // Log each line for debugging
-          console.log('Processing line:', line);
-
-          // Skip empty lines
-          if (!line.trim()) continue;
-
-          // Check for the [DONE] message
-          if (line.trim() === 'data: [DONE]') {
-            console.log('Detected [DONE] message');
-            res.write('data: [DONE]\n\n');
-            done = true;
-            break;
-          }
-
-          // Process JSON data
-          if (line.startsWith('data: ')) {
-            const jsonString = line.replace(/^data: /, '').trim();
-            if (jsonString) {
-              try {
-                const json = JSON.parse(jsonString);
-                if (json.choices[0].delta.content) {
-                  const content = json.choices[0].delta.content;
-                  console.log('Sending content from Server:', content);
-                  res.write(`data: ${JSON.stringify({ content })}\n\n`); // Send as JSON
-                  res.flush(); // Flush the response
-                }
-              } catch (error) {
-                console.error('Error parsing JSON:', error);
-              }
-            }
-          }
-        }
-      }
-
-      res.end();
     }
+
+    res.write('data: [DONE]\n\n');
+    res.end();
   } catch (error) {
     console.error('Error creating chat completion:', error);
     if (!res.headersSent) {
