@@ -62,7 +62,7 @@ export default function Chat() {
         return setError(errorMessage);
       }
 
-      if (api === 'llama3.2') {
+      if (api === 'llama3.2' || api === 'gemma') {
         const data = await response.json();
         setMessages((prevMessages) => [...prevMessages, { role: 'ai', content: data.content, api }]);
       } else {
@@ -217,6 +217,7 @@ export default function Chat() {
               <option value="deepseek">DeepSeek</option>
               <option value="openai">OpenAI</option>
               <option value="llama3.2">Llama3.2</option>
+              <option value="gemma">Gemma</option>
             </select>
           </div>
 

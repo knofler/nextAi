@@ -29,11 +29,16 @@ export default async function handler(req, res) {
       apiUrl = 'http://localhost:11434/api/generate';
       model = 'llama3.2'; // Replace with your correct model name
       break;
+    case 'gemma':
+      console.log('Gemma API selected and userAPIKey is not required');
+      apiUrl = 'http://localhost:11434/api/generate';
+      model = 'gemma'; // Replace with your correct model name
+      break;
     default:
       return res.status(400).json({ message: 'Invalid API selected' });
   }
 
-  if (api !== 'llama3.2' && !apiKey) {
+  if (api !== 'llama3.2' && api !== 'gemma' && !apiKey) {
     return res.status(401).json({ message: 'API key is missing or invalid' });
   }
 
@@ -47,11 +52,11 @@ export default async function handler(req, res) {
       'Content-Type': 'application/json',
     };
 
-    if (api !== 'llama3.2') {
+    if (api !== 'llama3.2' && api !== 'gemma') {
       headers['Authorization'] = `Bearer ${apiKey}`;
     }
 
-    const body = api === 'llama3.2' ? JSON.stringify({
+    const body = api === 'llama3.2' || api === 'gemma' ? JSON.stringify({
       model: model,
       prompt: query,
       max_tokens: 50,
@@ -76,7 +81,7 @@ export default async function handler(req, res) {
       throw new Error(`Request failed with status ${response.status}: ${text}`);
     }
 
-    if (api === 'llama3.2') {
+    if (api === 'llama3.2' || api === 'gemma') {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let done = false;
