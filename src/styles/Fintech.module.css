@@ -1,6 +1,5 @@
 .container {
   display: flex;
-  justify-content: space-between;
   max-width: 1600px; /* Increase the max-width to provide more space */
   margin: 0 auto;
   padding: 20px;
@@ -13,11 +12,29 @@
 .calculator {
   flex: 1;
   margin-right: 20px;
-  max-width: 800px; /* Increase the max-width of the calculator */
+  max-width: 600px; /* Adjust the max-width of the calculator */
+}
+
+.summary {
+  margin-bottom: 20px;
+  padding: 20px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.summary h2 {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.summary p {
+  margin: 5px 0;
+  color: #555;
 }
 
 .charts {
-  flex: 2; /* Reduce the flex value to give less space to the charts */
+  flex: 2; /* Adjust the flex value to give more space to the charts */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -74,5 +91,5 @@
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  height: 400px; /* Increase the height to make the charts larger */
+  height: 400px; /* Adjust the height to make the charts larger */
 }

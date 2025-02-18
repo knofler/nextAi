@@ -40,9 +40,25 @@ const getFrequencyMultiplier = (frequency) => {
   }
 };
 
+const calculateTax = (income) => {
+  if (income <= 18200) {
+    return 0;
+  } else if (income <= 45000) {
+    return (income - 18200) * 0.16;
+  } else if (income <= 135000) {
+    return (45000 - 18200) * 0.16 + (income - 45000) * 0.30;
+  } else if (income <= 190000) {
+    return (45000 - 18200) * 0.16 + (135000 - 45000) * 0.30 + (income - 135000) * 0.37;
+  } else {
+    return (45000 - 18200) * 0.16 + (135000 - 45000) * 0.30 + (190000 - 135000) * 0.37 + (income - 190000) * 0.45;
+  }
+};
+
 const Fintech = () => {
-  const [income, setIncome] = useState('');
-  const [incomeFrequency, setIncomeFrequency] = useState('yearly');
+  const [income1, setIncome1] = useState('');
+  const [income2, setIncome2] = useState('');
+  const [incomeFrequency1, setIncomeFrequency1] = useState('yearly');
+  const [incomeFrequency2, setIncomeFrequency2] = useState('yearly');
   const [expenses, setExpenses] = useState('');
   const [expensesFrequency, setExpensesFrequency] = useState('monthly');
   const [projectionYears, setProjectionYears] = useState(1);
@@ -67,9 +83,16 @@ const Fintech = () => {
   const [compoundProjections, setCompoundProjections] = useState([]);
   const [pieData, setPieData] = useState({});
 
-  const annualIncome = income * getFrequencyMultiplier(incomeFrequency);
+  const annualIncome1 = income1 * getFrequencyMultiplier(incomeFrequency1);
+  const annualIncome2 = income2 * getFrequencyMultiplier(incomeFrequency2);
   const annualExpenses = expenses * getFrequencyMultiplier(expensesFrequency);
-  const annualAvailableSavings = annualIncome - annualExpenses;
+
+  const annualTax1 = calculateTax(annualIncome1);
+  const annualTax2 = calculateTax(annualIncome2);
+
+  const totalIncome = annualIncome1 + annualIncome2;
+  const totalTax = annualTax1 + annualTax2;
+  const annualAvailableSavings = totalIncome - totalTax - annualExpenses;
 
   const handleCalculate = () => {
     const totalAllocatedSavings =
@@ -117,12 +140,12 @@ const Fintech = () => {
       projection.push({
         year: i,
         savings: totalSavings,
-        investmentReturn: fixedInterest + etfReinvestment + cryptoReturn + sharesReturn,
+        investmentReturn: fixedInterestTotal + etfTotal + cryptoTotal + sharesTotal,
       });
       compoundProjection.push({
         year: i,
         savings: totalCompoundSavings,
-        investmentReturn: fixedInterest + etfReinvestment + cryptoReturn + sharesReturn,
+        investmentReturn: fixedInterestTotal + etfTotal + cryptoTotal + sharesTotal,
       });
     }
 
@@ -175,7 +198,7 @@ const Fintech = () => {
       },
       {
         label: 'Total Return on Investment',
-        data: projections.map((p) => p.savings + p.investmentReturn),
+        data: projections.map((p) => p.investmentReturn),
         fill: false,
         backgroundColor: 'rgba(153,102,255,0.4)',
         borderColor: 'rgba(153,102,255,1)',
@@ -188,8 +211,10 @@ const Fintech = () => {
   useEffect(() => {
     handleCalculate();
   }, [
-    income,
-    incomeFrequency,
+    income1,
+    income2,
+    incomeFrequency1,
+    incomeFrequency2,
     expenses,
     expensesFrequency,
     projectionYears,
@@ -211,189 +236,216 @@ const Fintech = () => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.calculator}>
-        <h1 className={styles.title}>Simple Web-Based Calculator MVP</h1>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleCalculate();
-          }}
-        >
-          <div className={styles.inputGroup}>
-            <label>Income:</label>
-            <input
-              type="number"
-              value={income}
-              onChange={(e) => setIncome(e.target.value)}
-              required
-            />
-            <select
-              value={incomeFrequency}
-              onChange={(e) => setIncomeFrequency(e.target.value)}
-            >
-              <option value="yearly">Yearly</option>
-              <option value="monthly">Monthly</option>
-              <option value="weekly">Weekly</option>
-              <option value="daily">Daily</option>
-            </select>
-          </div>
-          <div className={styles.inputGroup}>
-            <label>Expenses:</label>
-            <input
-              type="number"
-              value={expenses}
-              onChange={(e) => setExpenses(e.target.value)}
-              required
-            />
-            <select
-              value={expensesFrequency}
-              onChange={(e) => setExpensesFrequency(e.target.value)}
-            >
-              <option value="yearly">Yearly</option>
-              <option value="monthly">Monthly</option>
-              <option value="weekly">Weekly</option>
-              <option value="daily">Daily</option>
-            </select>
-          </div>
-          <div className={styles.inputGroup}>
-            <label>Projection Years:</label>
-            <input
-              type="number"
-              value={projectionYears}
-              onChange={(e) => setProjectionYears(e.target.value)}
-              required
-            />
-          </div>
-          <div className={styles.inputGroup}>
-            <label>Compound Growth Rate (% per year):</label>
-            <input
-              type="number"
-              value={compoundGrowthRate}
-              onChange={(e) => setCompoundGrowthRate(e.target.value)}
-              required
-            />
-          </div>
-
-          <h2>Savings and Investment Options</h2>
-
-          <div className={styles.inputGroup}>
-            <label>Fixed Interest Savings:</label>
-            <input
-              type="number"
-              value={fixedInterestSavings}
-              onChange={(e) => handleSavingsChange(setFixedInterestSavings, e.target.value, fixedInterestFrequency)}
-              required
-            />
-            <select
-              value={fixedInterestFrequency}
-              onChange={(e) => setFixedInterestFrequency(e.target.value)}
-            >
-              <option value="yearly">Yearly</option>
-              <option value="monthly">Monthly</option>
-              <option value="weekly">Weekly</option>
-              <option value="daily">Daily</option>
-            </select>
-            <label>Interest Rate (% per year):</label>
-            <input
-              type="number"
-              value={fixedInterestRate}
-              onChange={(e) => setFixedInterestRate(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className={styles.inputGroup}>
-            <label>ETF Investment:</label>
-            <input
-              type="number"
-              value={etfInvestment}
-              onChange={(e) => handleSavingsChange(setEtfInvestment, e.target.value, etfFrequency)}
-              required
-            />
-            <select
-              value={etfFrequency}
-              onChange={(e) => setEtfFrequency(e.target.value)}
-            >
-              <option value="yearly">Yearly</option>
-              <option value="monthly">Monthly</option>
-              <option value="weekly">Weekly</option>
-              <option value="daily">Daily</option>
-            </select>
-            <label>Annual Return (% per year):</label>
-            <input
-              type="number"
-              value={etfAnnualReturn}
-              onChange={(e) => setEtfAnnualReturn(e.target.value)}
-              required
-            />
-            <label>
+      <div className={styles.leftPanel}>
+        <div className={styles.calculator}>
+          <h1 className={styles.title}>Simple Web-Based Calculator MVP</h1>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleCalculate();
+            }}
+          >
+            <div className={styles.inputGroup}>
+              <label>Income 1:</label>
               <input
-                type="checkbox"
-                checked={etfDividendReinvestment}
-                onChange={(e) => setEtfDividendReinvestment(e.target.checked)}
+                type="number"
+                value={income1}
+                onChange={(e) => setIncome1(e.target.value)}
+                required
               />
-              Reinvest Dividends
-            </label>
-          </div>
+              <select
+                value={incomeFrequency1}
+                onChange={(e) => setIncomeFrequency1(e.target.value)}
+              >
+                <option value="yearly">Yearly</option>
+                <option value="monthly">Monthly</option>
+                <option value="weekly">Weekly</option>
+                <option value="daily">Daily</option>
+              </select>
+            </div>
+            <div className={styles.inputGroup}>
+              <label>Income 2:</label>
+              <input
+                type="number"
+                value={income2}
+                onChange={(e) => setIncome2(e.target.value)}
+                required
+              />
+              <select
+                value={incomeFrequency2}
+                onChange={(e) => setIncomeFrequency2(e.target.value)}
+              >
+                <option value="yearly">Yearly</option>
+                <option value="monthly">Monthly</option>
+                <option value="weekly">Weekly</option>
+                <option value="daily">Daily</option>
+              </select>
+            </div>
+            <div className={styles.inputGroup}>
+              <label>Expenses:</label>
+              <input
+                type="number"
+                value={expenses}
+                onChange={(e) => setExpenses(e.target.value)}
+                required
+              />
+              <select
+                value={expensesFrequency}
+                onChange={(e) => setExpensesFrequency(e.target.value)}
+              >
+                <option value="yearly">Yearly</option>
+                <option value="monthly">Monthly</option>
+                <option value="weekly">Weekly</option>
+                <option value="daily">Daily</option>
+              </select>
+            </div>
+            <div className={styles.inputGroup}>
+              <label>Projection Years:</label>
+              <input
+                type="number"
+                value={projectionYears}
+                onChange={(e) => setProjectionYears(e.target.value)}
+                required
+              />
+            </div>
+            <div className={styles.inputGroup}>
+              <label>Compound Growth Rate:</label>
+              <input
+                type="number"
+                value={compoundGrowthRate}
+                onChange={(e) => setCompoundGrowthRate(e.target.value)}
+                required
+              />
+            </div>
 
-          <div className={styles.inputGroup}>
-            <label>Crypto Investment:</label>
-            <input
-              type="number"
-              value={cryptoInvestment}
-              onChange={(e) => handleSavingsChange(setCryptoInvestment, e.target.value, cryptoFrequency)}
-              required
-            />
-            <select
-              value={cryptoFrequency}
-              onChange={(e) => setCryptoFrequency(e.target.value)}
-            >
-              <option value="yearly">Yearly</option>
-              <option value="monthly">Monthly</option>
-              <option value="weekly">Weekly</option>
-              <option value="daily">Daily</option>
-            </select>
-            <label>Growth Rate (% per year):</label>
-            <input
-              type="number"
-              value={cryptoGrowthRate}
-              onChange={(e) => setCryptoGrowthRate(e.target.value)}
-              required
-            />
-          </div>
+            <h2>Savings and Investment Options</h2>
 
-          <div className={styles.inputGroup}>
-            <label>Shares Investment:</label>
-            <input
-              type="number"
-              value={sharesInvestment}
-              onChange={(e) => handleSavingsChange(setSharesInvestment, e.target.value, sharesFrequency)}
-              required
-            />
-            <select
-              value={sharesFrequency}
-              onChange={(e) => setSharesFrequency(e.target.value)}
-            >
-              <option value="yearly">Yearly</option>
-              <option value="monthly">Monthly</option>
-              <option value="weekly">Weekly</option>
-              <option value="daily">Daily</option>
-            </select>
-            <label>Growth Rate (% per year):</label>
-            <input
-              type="number"
-              value={sharesGrowthRate}
-              onChange={(e) => setSharesGrowthRate(e.target.value)}
-              required
-            />
-          </div>
+            <div className={styles.inputGroup}>
+              <label>Fixed Interest Savings:</label>
+              <input
+                type="number"
+                value={fixedInterestSavings}
+                onChange={(e) => handleSavingsChange(setFixedInterestSavings, e.target.value, fixedInterestFrequency)}
+                required
+              />
+              <select
+                value={fixedInterestFrequency}
+                onChange={(e) => setFixedInterestFrequency(e.target.value)}
+              >
+                <option value="yearly">Yearly</option>
+                <option value="monthly">Monthly</option>
+                <option value="weekly">Weekly</option>
+                <option value="daily">Daily</option>
+              </select>
+              <label>Interest Rate:</label>
+              <input
+                type="number"
+                value={fixedInterestRate}
+                onChange={(e) => setFixedInterestRate(e.target.value)}
+                required
+              />
+            </div>
 
-          <button type="submit" className={styles.button}>
-            Calculate
-          </button>
-        </form>
+            <div className={styles.inputGroup}>
+              <label>ETF Investment:</label>
+              <input
+                type="number"
+                value={etfInvestment}
+                onChange={(e) => handleSavingsChange(setEtfInvestment, e.target.value, etfFrequency)}
+                required
+              />
+              <select
+                value={etfFrequency}
+                onChange={(e) => setEtfFrequency(e.target.value)}
+              >
+                <option value="yearly">Yearly</option>
+                <option value="monthly">Monthly</option>
+                <option value="weekly">Weekly</option>
+                <option value="daily">Daily</option>
+              </select>
+              <label>Annual Return:</label>
+              <input
+                type="number"
+                value={etfAnnualReturn}
+                onChange={(e) => setEtfAnnualReturn(e.target.value)}
+                required
+              />
+              <label>
+                <input
+                  type="checkbox"
+                  checked={etfDividendReinvestment}
+                  onChange={(e) => setEtfDividendReinvestment(e.target.checked)}
+                />
+                Reinvest Dividends
+              </label>
+            </div>
+
+            <div className={styles.inputGroup}>
+              <label>Crypto Investment:</label>
+              <input
+                type="number"
+                value={cryptoInvestment}
+                onChange={(e) => handleSavingsChange(setCryptoInvestment, e.target.value, cryptoFrequency)}
+                required
+              />
+              <select
+                value={cryptoFrequency}
+                onChange={(e) => setCryptoFrequency(e.target.value)}
+              >
+                <option value="yearly">Yearly</option>
+                <option value="monthly">Monthly</option>
+                <option value="weekly">Weekly</option>
+                <option value="daily">Daily</option>
+              </select>
+              <label>Growth Rate:</label>
+              <input
+                type="number"
+                value={cryptoGrowthRate}
+                onChange={(e) => setCryptoGrowthRate(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className={styles.inputGroup}>
+              <label>Shares Investment:</label>
+              <input
+                type="number"
+                value={sharesInvestment}
+                onChange={(e) => handleSavingsChange(setSharesInvestment, e.target.value, sharesFrequency)}
+                required
+              />
+              <select
+                value={sharesFrequency}
+                onChange={(e) => setSharesFrequency(e.target.value)}
+              >
+                <option value="yearly">Yearly</option>
+                <option value="monthly">Monthly</option>
+                <option value="weekly">Weekly</option>
+                <option value="daily">Daily</option>
+              </select>
+              <label>Growth Rate:</label>
+              <input
+                type="number"
+                value={sharesGrowthRate}
+                onChange={(e) => setSharesGrowthRate(e.target.value)}
+                required
+              />
+            </div>
+
+            <button type="submit" className={styles.button}>
+              Calculate
+            </button>
+          </form>
+          <div className={styles.summary}>
+            <h2>Summary</h2>
+            <p>Total Income: ${totalIncome.toFixed(2)}</p>
+            <p>Total Tax: ${totalTax.toFixed(2)}</p>
+            <p>Total Expenses: ${annualExpenses.toFixed(2)}</p>
+            <p>Total Fund Available for Investment: ${annualAvailableSavings.toFixed(2)}</p>
+          </div>
+        </div>
       </div>
-      <div className={styles.charts}>
+      <div className={styles.rightPanel}>
         {projections.length > 0 && (
           <>
             <div className={styles.chartContainer}>
