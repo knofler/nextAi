@@ -1,12 +1,26 @@
 .container {
-  max-width: 800px;
+  display: flex;
+  justify-content: space-between;
+  max-width: 1600px; /* Increase the max-width to provide more space */
   margin: 0 auto;
   padding: 20px;
   background: #f9f9f9;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  text-align: center;
   font-family: 'Arial', sans-serif;
+}
+
+.calculator {
+  flex: 1;
+  margin-right: 20px;
+  max-width: 800px; /* Increase the max-width of the calculator */
+}
+
+.charts {
+  flex: 2; /* Reduce the flex value to give less space to the charts */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .title {
@@ -32,11 +46,11 @@
 .inputGroup input,
 .inputGroup select {
   flex: 2;
-  padding: 10px;
+  padding: 5px;
   margin-right: 10px;
   border: 1px solid #ddd;
   border-radius: 5px;
-  font-size: 1em;
+  font-size: 0.9em;
 }
 
 .button {
@@ -60,4 +74,5 @@
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  height: 400px; /* Increase the height to make the charts larger */
 }
