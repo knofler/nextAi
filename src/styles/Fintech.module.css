@@ -1,6 +1,6 @@
 .container {
   display: flex;
-  max-width: 1600px; /* Increase the max-width to provide more space */
+  max-width: 1600px;
   margin: 0 auto;
   padding: 20px;
   background: #f9f9f9;
@@ -9,10 +9,23 @@
   font-family: 'Arial', sans-serif;
 }
 
-.calculator {
+.leftPanel {
   flex: 1;
   margin-right: 20px;
-  max-width: 600px; /* Adjust the max-width of the calculator */
+  max-width: 50%; /* Adjust the max-width to 50% */
+}
+
+.rightPanel {
+  flex: 1;
+  max-width: 50%; /* Adjust the max-width to 50% */
+}
+
+.calculator {
+  margin-bottom: 20px;
+  padding: 20px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .summary {
@@ -34,7 +47,6 @@
 }
 
 .charts {
-  flex: 2; /* Adjust the flex value to give more space to the charts */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
