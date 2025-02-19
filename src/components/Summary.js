@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from '../styles/Fintech.module.css';
 
-const Summary = ({ totalIncome, totalTax, annualExpenses, annualAvailableSavings }) => {
+const Summary = ({ totalIncome, totalTax, annualExpenses, annualAvailableSavings, remainingSavings }) => {
   return (
     <div className={styles.summary}>
       <h2>Summary</h2>
@@ -9,6 +9,7 @@ const Summary = ({ totalIncome, totalTax, annualExpenses, annualAvailableSavings
       <p>Total Tax: ${totalTax.toFixed(2)}</p>
       <p>Annual Expenses: ${annualExpenses.toFixed(2)}</p>
       <p>Annual Available Savings: ${annualAvailableSavings.toFixed(2)}</p>
+      <p>Remaining Savings: ${remainingSavings.toFixed(2)}</p>
     </div>
   );
 };

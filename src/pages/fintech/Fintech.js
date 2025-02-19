@@ -43,6 +43,7 @@ const Fintech = () => {
   const [projections, setProjections] = useState([]);
   const [compoundProjections, setCompoundProjections] = useState([]);
   const [pieData, setPieData] = useState({});
+  const [remainingSavings, setRemainingSavings] = useState(0);
 
   const annualIncome1 = calculateAnnualIncome(income1 || 0, incomeFrequency1);
   const annualIncome2 = calculateAnnualIncome(income2 || 0, incomeFrequency2);
@@ -66,6 +67,14 @@ const Fintech = () => {
       sharesInvestment || 0,
       sharesFrequency
     );
+
+    const remaining = annualAvailableSavings - totalAllocatedSavings;
+    setRemainingSavings(remaining);
+
+    if (totalAllocatedSavings > annualAvailableSavings) {
+      alert('Total allocated savings exceed available savings after expenses.');
+      return;
+    }
 
     const { projection, compoundProjection, fixedInterestTotal, etfTotal, cryptoTotal, sharesTotal } = calculateProjections(
       annualAvailableSavings,
@@ -183,6 +192,7 @@ const Fintech = () => {
             totalTax={totalTax}
             annualExpenses={annualExpenses}
             annualAvailableSavings={annualAvailableSavings}
+            remainingSavings={remainingSavings}
           />
         </div>
         <Super />
