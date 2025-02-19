@@ -8,6 +8,8 @@ export const getFrequencyMultiplier = (frequency) => {
       return 52;
     case 'daily':
       return 365;
+    case 'biennial':
+      return 0.5;
     default:
       return 1;
   }
@@ -60,8 +62,8 @@ export const calculateProjections = (annualAvailableSavings, totalAllocatedSavin
   let sharesTotal = 0;
 
   for (let i = 1; i <= projectionYears; i++) {
-    totalSavings += annualAvailableSavings - totalAllocatedSavings;
-    totalCompoundSavings = (totalCompoundSavings + annualAvailableSavings - totalAllocatedSavings) * (1 + compoundGrowthRate / 100);
+    totalSavings += annualAvailableSavings;
+    totalCompoundSavings = (totalCompoundSavings + annualAvailableSavings) * (1 + compoundGrowthRate / 100);
 
     // Fixed interest savings
     const fixedInterest = fixedInterestSavings * getFrequencyMultiplier(fixedInterestFrequency) * Math.pow(1 + fixedInterestRate / 100, i);
@@ -80,15 +82,21 @@ export const calculateProjections = (annualAvailableSavings, totalAllocatedSavin
     const sharesReturn = sharesInvestment * getFrequencyMultiplier(sharesFrequency) * Math.pow(1 + sharesGrowthRate / 100, i);
     sharesTotal += sharesReturn;
 
+    // Calculate remaining savings
+    const remainingSavings = annualAvailableSavings - totalAllocatedSavings;
+
+    // Calculate total return on investment
+    const totalReturnOnInvestment = fixedInterestTotal + etfTotal + cryptoTotal + sharesTotal + (remainingSavings * i);
+
     projection.push({
       year: i,
       savings: totalSavings,
-      investmentReturn: fixedInterestTotal + etfTotal + cryptoTotal + sharesTotal,
+      investmentReturn: totalReturnOnInvestment,
     });
     compoundProjection.push({
       year: i,
       savings: totalCompoundSavings,
-      investmentReturn: fixedInterestTotal + etfTotal + cryptoTotal + sharesTotal,
+      investmentReturn: totalReturnOnInvestment,
     });
   }
 

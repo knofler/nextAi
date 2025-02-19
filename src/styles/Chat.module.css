@@ -1,221 +1,140 @@
-.chatContainer {
+.container {
+  display: flex;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  font-family: 'Arial', sans-serif;
+}
+
+.leftPanel {
+  flex: 1;
+  margin-right: 20px;
+  max-width: 50%; /* Adjust the max-width to 50% */
+}
+
+.rightPanel {
+  flex: 1;
+  max-width: 50%; /* Adjust the max-width to 50% */
+}
+
+.calculator {
+  margin-bottom: 20px;
+  padding: 20px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.summary {
+  margin-bottom: 20px;
+  padding: 20px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.summary h2 {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.summary p {
+  margin: 5px 0;
+  color: #555;
+}
+
+.charts {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  width: 90vw; /* 90% of viewport width */
-  max-width: 800px; /* Maximum width for desktop */
-  margin: 0 auto; /* Center the container */
-  padding: 10px;
-  box-sizing: border-box;
-}
-
-.formRow {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
-  width: 100%;
-  margin-bottom: 10px;
 }
 
-.selectContainer {
+.title {
+  font-size: 2em;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.inputGroup {
   display: flex;
-  align-items: center;
-  margin-bottom: 10px;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 15px;
 }
 
-.selectLabel {
-  margin-right: 10px;
+.inputGroup label {
+  margin-bottom: 5px;
   font-weight: bold;
+  color: #555;
 }
 
-.select {
-  padding: 0.4rem;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  background-color: white;
-  cursor: pointer;
-  margin-bottom: 0.4rem;
-  margin-left: 0.6rem;
-}
-
-.apiKeyContainer {
-  display: flex;
-  align-items: center;
-  margin-left: 20px;
-}
-
-.apiKeyLabel {
-  margin-right: 10px;
-  font-weight: bold;
-  margin-bottom: 1rem;
-}
-
-.apiKeyInput {
-  padding: 0.4rem;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  margin-left: 10px;
-  margin-bottom: 1rem;
-}
-
-.chatBoundary {
+.inputGroup input,
+.inputGroup select {
   width: 100%;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  padding: 10px;
+  padding: 5px;
   margin-bottom: 10px;
-  min-width: 300px;
-  box-sizing: border-box;
-}
-
-.chatBox {
-  max-height: 400px;
-  overflow-y: auto;
-  margin-bottom: 10px;
-  padding: 0.5rem;
-  box-sizing: border-box;
-  word-wrap: break-word;
-}
-
-.inputContainer {
-  display: flex;
-  width: 100%;
-}
-
-.inputText {
-  flex: 1;
-  padding: 0.61rem 0.35rem;
-  border: 1px solid #ccc;
+  border: 1px solid #ddd;
   border-radius: 5px;
-  line-height: 1.2rem;
-  font-size: 1rem;
-  resize: none;
-  overflow: hidden;
-  max-height: 350px;
-  transition: height 0.2s ease;
-  width: calc(100% - 90px); /* Adjust width to leave space for the button */
-  box-sizing: border-box;
+  font-size: 0.9em;
 }
 
 .button {
   padding: 10px 20px;
-  margin-left: 10px;
+  background-color: #0070f3;
+  color: white;
   border: none;
   border-radius: 5px;
-  background-color: #007bff;
-  color: white;
   cursor: pointer;
-  width: 80px; /* Fixed width for the button */
-  flex-shrink: 0; /* Prevent the button from shrinking */
+  font-size: 1em;
+  transition: background-color 0.3s;
 }
 
-.buttonDisabled {
-  background-color: #ccc;
-  cursor: not-allowed;
+.button:hover {
+  background-color: #005bb5;
 }
 
-.userMessage {
-  margin: 1rem 0.1rem;
-  color: rgb(223, 68, 11);
-  font-weight: 600;
-}
-
-.userMessage::first-letter {
-  text-transform: capitalize;
-}
-
-.userName {
-  color: #043972;
-  font-weight: 600;
-}
-
-.aiMessage {
-  margin-bottom: 10px;
-}
-
-.codeBlock {
-  background-color: #181d28;
-  color: #eeee;
-  padding: 10px;
-  border-radius: 5px;
-  margin: 1rem 0.1rem;
-  font-family: monospace;
-  line-height: 1.5;
-  font-size: 0.9rem;
-  word-wrap: break-word;
-  white-space: pre-wrap;
-  overflow-x: auto;
-  box-sizing: border-box;
-}
-
-.errorMessage {
-  color: red;
-  margin-top: 1rem;
+.chartContainer {
+  margin-top: 20px;
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  height: 400px; /* Adjust the height to make the charts larger */
 }
 
 /* Media queries for mobile responsiveness */
-@media (max-width: 600px) {
-  .chatContainer {
-    height: auto; /* Adjust height for mobile */
-    width: 100vw; /* Full width on mobile */
-    padding: 5px; /* Reduce padding for mobile */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    padding: 10px;
   }
 
-  .formRow {
-    flex-direction: column; /* Stack items vertically on mobile */
-    align-items: flex-start; /* Align items to the start */
+  .leftPanel,
+  .rightPanel {
+    max-width: 100%;
+    margin-right: 0;
   }
 
-  .selectContainer {
-    width: 100%; /* Full width on mobile */
+  .charts {
+    margin-top: 20px;
+  }
+
+  .chartContainer {
+    height: 300px; /* Adjust the height for mobile */
+  }
+
+  .inputGroup {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .inputGroup label,
+  .inputGroup input,
+  .inputGroup select {
+    width: 100%;
     margin-bottom: 10px;
-  }
-
-  .select {
-    width: 100%; /* Full width on mobile */
-    margin-left: 0; /* Remove left margin */
-  }
-
-  .apiKeyContainer {
-    width: 100%; /* Full width on mobile */
-    margin-left: 0; /* Remove left margin */
-  }
-
-  .apiKeyInput {
-    width: 100%; /* Full width on mobile */
-    margin-left: 0; /* Remove left margin */
-  }
-
-  .chatBoundary {
-    padding: 5px; /* Reduce padding for mobile */
-  }
-
-  .chatBox {
-    max-height: 300px; /* Adjust max height for mobile */
-  }
-
-  .inputContainer {
-    flex-direction: column; /* Stack items vertically on mobile */
-  }
-
-  .inputText {
-    width: 100%; /* Full width on mobile */
-    margin-bottom: 10px; /* Add space below the input */
-  }
-
-  .button {
-    width: 100%; /* Full width on mobile */
-    margin-left: 0; /* Remove left margin */
-  }
-
-  .userMessage, .aiMessage {
-    font-size: 0.9rem; /* Adjust font size for mobile */
-  }
-
-  .codeBlock {
-    font-size: 0.8rem; /* Adjust font size for mobile */
-    padding: 8px; /* Adjust padding for mobile */
   }
 }
