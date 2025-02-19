@@ -50,7 +50,7 @@ export const calculateTotalAllocatedSavings = (fixedInterestSavings, fixedIntere
   );
 };
 
-export const calculateProjections = (annualAvailableSavings, totalAllocatedSavings, projectionYears, compoundGrowthRate, fixedInterestSavings, fixedInterestRate, fixedInterestFrequency, etfInvestment, etfAnnualReturn, etfFrequency, etfDividendReinvestment, cryptoInvestment, cryptoGrowthRate, cryptoFrequency, sharesInvestment, sharesGrowthRate, sharesFrequency) => {
+export const calculateProjections = (annualAvailableSavings, totalAllocatedSavings, projectionYears, compoundGrowthRate, fixedInterestSavings, fixedInterestRate, fixedInterestFrequency, etfInvestment, etfAnnualReturn, etfFrequency, etfDividendReinvestment, cryptoInvestment, cryptoGrowthRate, cryptoFrequency, sharesInvestment, sharesGrowthRate, sharesFrequency, reinvestDividends) => {
   const projection = [];
   const compoundProjection = [];
   let totalSavings = 0;
@@ -68,7 +68,8 @@ export const calculateProjections = (annualAvailableSavings, totalAllocatedSavin
 
     // Fixed interest savings
     const fixedInterest = fixedInterestSavings * getFrequencyMultiplier(fixedInterestFrequency) * Math.pow(1 + fixedInterestRate / 100, i);
-    fixedInterestTotal += fixedInterest;
+    const fixedInterestReinvestment = reinvestDividends ? fixedInterest : 0;
+    fixedInterestTotal += fixedInterest + fixedInterestReinvestment;
 
     // ETF investment
     const etfReturn = etfInvestment * getFrequencyMultiplier(etfFrequency) * Math.pow(1 + etfAnnualReturn / 100, i);
@@ -77,21 +78,21 @@ export const calculateProjections = (annualAvailableSavings, totalAllocatedSavin
 
     // Crypto investment
     const cryptoReturn = cryptoInvestment * getFrequencyMultiplier(cryptoFrequency) * Math.pow(1 + cryptoGrowthRate / 100, i);
-    cryptoTotal += cryptoReturn;
+    const cryptoReinvestment = reinvestDividends ? cryptoReturn : 0;
+    cryptoTotal += cryptoReturn + cryptoReinvestment;
 
     // Shares investment
     const sharesReturn = sharesInvestment * getFrequencyMultiplier(sharesFrequency) * Math.pow(1 + sharesGrowthRate / 100, i);
-    sharesTotal += sharesReturn;
+    const sharesReinvestment = reinvestDividends ? sharesReturn : 0;
+    sharesTotal += sharesReturn + sharesReinvestment;
 
     // Calculate remaining savings
     const remainingSavings = annualAvailableSavings - totalAllocatedSavings;
     const remainingSavingsReturn = remainingSavings * i;
     totalRemainingSavings += remainingSavingsReturn;
 
-
-
     // Calculate total return on investment
-    const totalReturnOnInvestment = fixedInterestTotal + etfTotal + cryptoTotal + sharesTotal + (remainingSavings * i);
+    const totalReturnOnInvestment = fixedInterestTotal + etfTotal + cryptoTotal + sharesTotal + totalRemainingSavings;
 
     projection.push({
       year: i,

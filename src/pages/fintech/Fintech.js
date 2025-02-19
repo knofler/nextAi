@@ -39,6 +39,7 @@ const Fintech = () => {
   const [sharesInvestment, setSharesInvestment] = useState('');
   const [sharesGrowthRate, setSharesGrowthRate] = useState(0);
   const [sharesFrequency, setSharesFrequency] = useState('monthly');
+  const [reinvestDividends, setReinvestDividends] = useState(false);
 
   const [projections, setProjections] = useState([]);
   const [compoundProjections, setCompoundProjections] = useState([]);
@@ -93,7 +94,8 @@ const Fintech = () => {
       cryptoFrequency,
       sharesInvestment || 0,
       sharesGrowthRate,
-      sharesFrequency
+      sharesFrequency,
+      reinvestDividends
     );
 
     setProjections(projection);
@@ -135,6 +137,7 @@ const Fintech = () => {
     sharesInvestment,
     sharesGrowthRate,
     sharesFrequency,
+    reinvestDividends,
   ]);
 
   return (
@@ -185,6 +188,8 @@ const Fintech = () => {
             setSharesGrowthRate={setSharesGrowthRate}
             sharesFrequency={sharesFrequency}
             setSharesFrequency={setSharesFrequency}
+            reinvestDividends={reinvestDividends}
+            setReinvestDividends={setReinvestDividends}
             handleCalculate={handleCalculate}
           />
           <Summary
