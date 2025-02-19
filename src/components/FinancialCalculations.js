@@ -54,6 +54,7 @@ export const calculateProjections = (annualAvailableSavings, totalAllocatedSavin
   const projection = [];
   const compoundProjection = [];
   let totalSavings = 0;
+  let totalRemainingSavings = 0;
   let totalCompoundSavings = 0;
 
   let fixedInterestTotal = 0;
@@ -84,6 +85,10 @@ export const calculateProjections = (annualAvailableSavings, totalAllocatedSavin
 
     // Calculate remaining savings
     const remainingSavings = annualAvailableSavings - totalAllocatedSavings;
+    const remainingSavingsReturn = remainingSavings * i;
+    totalRemainingSavings += remainingSavingsReturn;
+
+
 
     // Calculate total return on investment
     const totalReturnOnInvestment = fixedInterestTotal + etfTotal + cryptoTotal + sharesTotal + (remainingSavings * i);
@@ -100,5 +105,5 @@ export const calculateProjections = (annualAvailableSavings, totalAllocatedSavin
     });
   }
 
-  return { projection, compoundProjection, fixedInterestTotal, etfTotal, cryptoTotal, sharesTotal };
+  return { projection, compoundProjection, fixedInterestTotal, etfTotal, cryptoTotal, sharesTotal, totalRemainingSavings };
 };

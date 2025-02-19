@@ -76,7 +76,7 @@ const Fintech = () => {
       return;
     }
 
-    const { projection, compoundProjection, fixedInterestTotal, etfTotal, cryptoTotal, sharesTotal } = calculateProjections(
+    const { projection, compoundProjection, fixedInterestTotal, etfTotal, cryptoTotal, sharesTotal, totalRemainingSavings } = calculateProjections(
       annualAvailableSavings,
       totalAllocatedSavings,
       projectionYears,
@@ -101,11 +101,11 @@ const Fintech = () => {
 
     // Update pie chart data
     setPieData({
-      labels: ['Fixed Interest', 'ETF', 'Crypto', 'Shares'],
+      labels: ['Fixed Interest', 'ETF', 'Crypto', 'Shares', 'Remaining Savings'],
       datasets: [
         {
-          data: [fixedInterestTotal, etfTotal, cryptoTotal, sharesTotal],
-          backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'],
+          data: [fixedInterestTotal, etfTotal, cryptoTotal, sharesTotal, totalRemainingSavings],
+          backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#ed1f17'],
         },
       ],
     });
@@ -141,7 +141,7 @@ const Fintech = () => {
     <div className={styles.container}>
       <div className={styles.leftPanel}>
         <div className={styles.calculator}>
-          <h1 className={styles.title}>Simple Web-Based Calculator MVP</h1>
+          <h1 className={styles.title}>Simple Investment Calculator</h1>
           <InputForm
             income1={income1}
             setIncome1={setIncome1}
